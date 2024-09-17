@@ -1,5 +1,5 @@
-#include <Arduino.h>
 #include <BluetoothSerial.h>
+#include <arduino.h>
 #include "freertos/semphr.h"
 #include <driver/dac.h>
 #include <SPI.h>
@@ -7,63 +7,68 @@
 
 BluetoothSerial SerialBT;
 TaskHandle_t Task1;
-TaskHandle_t Task2;
-hw_timer_t *soundTimer = NULL;
-hw_timer_t *adcTimer = NULL;
-hw_timer_t *clickTimer = NULL;
+hw_timer_t *fastTimer = NULL;
+
 // SemaphoreHandle_t clickSemaphore = NULL;
 SemaphoreHandle_t waitForFile = NULL;
 SemaphoreHandle_t waitForCliksToFinish = NULL;
 SemaphoreHandle_t waitForAdcToFinish = NULL;
 SemaphoreHandle_t waitForBufferA = NULL;
 SemaphoreHandle_t waitForBufferB = NULL;
-bool burst_done = false;
+bool clicksdone = false;
 
 // SdFat SD;
 File bufferFile;
 const String filename = "/~.temp";
 bool bufferA = true;
-uint8_t adcBufferA[512];
-uint8_t adcBufferB[512];
-uint16_t adcBufferIdx = 0;
 
-// Sound array of 10ms with 100ksps
-uint8_t click[1000];
-const uint16_t NClicks = 2000;
-const uint16_t silent_pause_ms = 20;
-uint16_t SampleIdx = 0;
-uint16_t clickIdx = 0;
+// ADC related variables
+uint16_t adcBufferA[256];
+uint16_t adcBufferB[256];
+uint8_t writeBuffer[512];
+uint16_t adcBufferIdx = 0;
 uint16_t readVal = 0;
 uint8_t ending = 0;
 uint8_t starting = 0;
-const uint freq[] = {250, 500, 1000, 2000, 4000, 8000};
+bool toWrite = false;
 
+// Sound array of 10ms with 100ksps
+uint8_t click[1000];
+const uint16_t NClicks = 100;
+uint16_t clickSampleIdx = 0;
+uint16_t clickIdx = 0;
 
-void IRAM_ATTR fileWriteISR(){
+// Frequencies
+const uint freqs[] = {250, 500, 1000, 2000, 4000, 8000};
+
+// interrupt index
+uint16_t interruptIdx = 0;
+
+void writeFile(){
   if (bufferA){
     if (xSemaphoreTake(waitForBufferB, portMAX_DELAY) == pdTRUE) {
-      bufferFile.write(adcBufferB, 512);
-      xSemaphoreGiveFromISR(waitForBufferB, NULL);
+      // memcpy(writeBuffer, adcBufferB, 512);
+      bufferFile.write((uint8_t *) adcBufferB, 512);
+      xSemaphoreGive(waitForBufferB);
     }
   }
   else{
     if (xSemaphoreTake(waitForBufferA, portMAX_DELAY) == pdTRUE) {
-      bufferFile.write(adcBufferA, 512);
-      xSemaphoreGiveFromISR(waitForBufferA, NULL);
+      // memcpy(writeBuffer, adcBufferA, 512);
+      bufferFile.write((uint8_t *) adcBufferA, 512);
+      xSemaphoreGive(waitForBufferA);
     }
   }
+  toWrite = false;
 }
 
-void IRAM_ATTR adcTimerISR()
+void readADC()
 {
   // Read ADC value and write it to the SD card
   readVal = analogRead(A0);
-  starting = (uint8_t) (readVal / 256);
-  ending = (uint8_t) (readVal % 256);
   if (bufferA){
     if (xSemaphoreTake(waitForBufferA, 0) == pdTRUE) {
-      adcBufferA[adcBufferIdx++] = starting;
-      adcBufferA[adcBufferIdx++] = ending;
+      adcBufferA[adcBufferIdx++] = readVal;
       xSemaphoreGiveFromISR(waitForBufferA, NULL);
     }
     else{
@@ -73,8 +78,7 @@ void IRAM_ATTR adcTimerISR()
   }
   else{
     if (xSemaphoreTake(waitForBufferB, 0) == pdTRUE) {
-      adcBufferB[adcBufferIdx++] = starting;
-      adcBufferB[adcBufferIdx++] = ending;
+      adcBufferB[adcBufferIdx++] = readVal;
       xSemaphoreGiveFromISR(waitForBufferB, NULL);
     }
     else{
@@ -82,69 +86,50 @@ void IRAM_ATTR adcTimerISR()
       ESP.restart();
     }
   }
-  if (adcBufferIdx == 512){
+  if (adcBufferIdx == 256){
     bufferA = !bufferA;
     adcBufferIdx = 0;
+    toWrite = true;
+    // xSemaphoreGiveFromISR(waitForAdcToFinish, NULL);
   }
 }
 
-void IRAM_ATTR soundTimerISR()
+void writeDAC()
 {
   // Send SineTable Values To DAC One By One
-  dac_output_voltage(DAC_CHANNEL_1, click[SampleIdx++]);
-  if(SampleIdx == 1000)
-  {
-    SampleIdx = 0;
-    timerAlarmDisable(soundTimer);
-    // xSemaphoreGive(clickSemaphore);
+  dac_output_voltage(DAC_CHANNEL_1, click[clickSampleIdx++]);
+  if(clickSampleIdx == 1000){
+    clickSampleIdx = 0;
   }
 }
 
-void IRAM_ATTR clickTimerISR(){
+void IRAM_ATTR fastTimerISER(){
+  // Sampling rate of 100 kHz / 100 = 1ksps
+  if (interruptIdx % 100 == 0){
+    readADC();
+    // if ((interruptIdx % 2560) == 0){
+    //   xSemaphoreTake(waitForAdcToFinish, 0);
+    // }
+  }
+  if (interruptIdx < 1000) {
+    writeDAC();
+  } 
+  if (interruptIdx == 3000) {
+    interruptIdx = 0;
+    clickIdx++;
+  }
   if (clickIdx == NClicks) {
-    timerAlarmDisable(adcTimer);
-    timerAlarmDisable(clickTimer);
-    adcBufferIdx = 0;
+    timerAlarmDisable(fastTimer);
     clickIdx = 0;
-    burst_done = true;
-    xSemaphoreGiveFromISR(waitForCliksToFinish, NULL);
+    clicksdone = true;
   }
-  timerRestart(soundTimer);
-  timerAlarmEnable(soundTimer);
-  // xSemaphoreTake(clickSemaphore, portMAX_DELAY); // Change to 20 ms later 
-  clickIdx++;
-  
-}
-
-void playClicks(void *pvParameters) {
-  // Timer for sound generation
-  soundTimer = timerBegin(0, 80, true); // 80 MHz / 80 = 1 MHz
-  timerAttachInterrupt(soundTimer, &soundTimerISR, true);
-  timerAlarmWrite(soundTimer, 10, true);
-
-  //Timer for clicks
-  clickTimer = timerBegin(1, 8000, true); // 80 MHz / 80000 = 10 kHz
-  timerAttachInterrupt(clickTimer, &clickTimerISR, true);
-  timerAlarmWrite(clickTimer, 300, true);
-
-  // clickSemaphore = xSemaphoreCreateBinary();
-  for (;;) {
-    vTaskSuspend(Task2);
-    burst_done = false;
-    if (xSemaphoreTake(waitForCliksToFinish, 0) == pdTRUE) {
-      timerRestart(clickTimer);
-      timerAlarmEnable(clickTimer);
-    }
-    else{
-      Serial.println("Error: Click Mutex not taken");
-      ESP.restart();
-    }
-  }
+  interruptIdx++;
 }
 
 void sendDataBT(){
   if (xSemaphoreTake(waitForFile, portMAX_DELAY) == pdTRUE) {
-    bufferFile.seek(0);
+    // bufferFile.seek(0);
+    bufferFile = SD.open(filename, "r");
     uint bytes_sent = 0;
     Serial.println("Sending the file through bluetooth");
     bool finished = false;
@@ -162,18 +147,38 @@ void sendDataBT(){
       bytes_sent++;
     }
     Serial.printf("Bytes sent: %d\n", bytes_sent);
-    bufferFile.seek(0);
+    bufferFile.close();
     xSemaphoreGive(waitForFile);
   }
 }
 
+void updateclick(uint freq){
+  // Update click array
+  for (uint16_t i = 0; i < 1000; i++) {
+    click[i] = 128 + 127 * sin(2 * PI * freq * i / 100000);
+  }  
+  // Forward entry: helps reducing the click sound
+  for (uint16_t i = 1; i < 11; i++) {
+    click[i - 1] = (click[i - 1] * i + 128 * (10 - i)) / 10; 
+  }
+  // Backward entry: helps reducing the click sound
+  for (uint16_t i = 1; i < 11; i++) {
+    click[1000 - i] = (click[1000 - i] * i + 128 * (10 - i)) / 10; 
+  }
+  // plot the click array:
+  // for (uint16_t i = 0; i < 1000; i++) {
+  //   Serial.printf(">%d:", freq);
+  //   Serial.println(click[i]);
+  // }
+}
+
 void control(void *pvParameters) {
   uint8_t freq_index = 0;
-  uint a_freq = 0;
-  // Timer for adc
-  adcTimer = timerBegin(2, 80, true); // 80 MHz / 80 = 1 MHz
-  timerAttachInterrupt(adcTimer, &adcTimerISR, true);
-  timerAlarmWrite(adcTimer, 100, true); // 10 kHz
+  uint freq = 0;
+  // Fast timer for sound and ADC
+  fastTimer = timerBegin(0, 80, true); // 80 MHz / 80 = 1 MHz
+  timerAttachInterrupt(fastTimer, &fastTimerISER, true);
+  timerAlarmWrite(fastTimer, 10, true); // 10 us
   for (;;){
     for (;;){
       if (SerialBT.available()) {
@@ -194,44 +199,47 @@ void control(void *pvParameters) {
         Serial.println("Invalid frequency index");
         continue;
       }
-      a_freq = freq[freq_index];
-      Serial.printf("Sending clicks of: %d Hz\n", a_freq);
-      // Update click array
-      for (uint16_t i = 0; i < 1000; i++) {
-        click[i] = 128 + 127 * sin(2 * PI * a_freq * i / 100000);
-      }  
-      // Forward entry: helps reducing the click sound
-      for (uint16_t i = 1; i < 11; i++) {
-        click[i - 1] = (click[i - 1] * i + 128 * (10 - i)) / 10; 
-      }
-      // Backward entry: helps reducing the click sound
-      for (uint16_t i = 1; i < 11; i++) {
-        click[1000 - i] = (click[1000 - i] * i + 128 * (10 - i)) / 10; 
-      }
-      // plot the click array:
-      // for (uint16_t i = 0; i < 1000; i++) {
-      //   Serial.printf(">%d:", a_freq);
-      //   Serial.println(click[i]);
-      // }
-      
+      freq = freqs[freq_index];
+      updateclick(freq);
+      Serial.printf("Sending clicks of: %d Hz\n", freq);
       break;
       }  
     }
-    // Serial.println("Enabling ADC and DAC");
-    Serial.println("Starting the burst");
-    dac_output_enable(DAC_CHANNEL_1);
-    vTaskResume(Task2);
-    timerRestart(adcTimer);
-    timerAlarmEnable(adcTimer);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    Serial.println("Waiting for the burst to finish");
-    if (xSemaphoreTake(waitForCliksToFinish, portMAX_DELAY) == pdTRUE) {
-      Serial.println("Burst done");
-      // wait till the adc writes the last value
-      sendDataBT();
-      Serial.println("Waiting for the next command");
-      dac_output_disable(DAC_CHANNEL_1);
+    bufferFile = SD.open(filename, "w");
+    if (!bufferFile) {
+      Serial.printf("Error opening %s.\n", filename);
+      return;
     }
+    // Serial.println("Enabling ADC and DAC");
+    dac_output_enable(DAC_CHANNEL_1);
+    clicksdone = false;
+    Serial.println("Starting the burst");
+    timerRestart(fastTimer);
+    timerAlarmEnable(fastTimer);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+    while (! clicksdone) {
+      if (toWrite) {
+        // Serial.println("One ADC buffer has been filled");
+        writeFile();
+        toWrite = false;
+      }
+      else{
+        delay(1);
+      }
+    }
+    if (adcBufferIdx > 0){
+      adcBufferIdx = 0;
+      bufferA = !bufferA;
+      toWrite = true;
+      writeFile();
+    }
+    bufferFile.close();
+    // bufferFile.flush();
+    Serial.println("Burst done. Sending the data through bluetooth");
+    // wait till the adc writes the last value
+    sendDataBT();
+    dac_output_disable(DAC_CHANNEL_1);
+    Serial.println("Waiting for the next command"); 
   }
 }
 
@@ -255,13 +263,6 @@ void setup() {
   }
   Serial.println("initialization done.");
 
-  // File creation
-  bufferFile = SD.open(filename, "wr");
-  if (!bufferFile) {
-    Serial.printf("Error opening %s.\n", filename);
-    return;
-  }
-
   // Semaphore creation
   waitForFile = xSemaphoreCreateBinary();
   waitForCliksToFinish = xSemaphoreCreateBinary();
@@ -284,17 +285,13 @@ void setup() {
     0,      /* Priority of the task */
     &Task1,   /* Task handle. */
     0);     /* Core where the task should run */
-
-  xTaskCreatePinnedToCore(
-    playClicks,   /* Function to implement the task */
-    "playClicsk", /* Name of the task */
-    1000,  /* Stack size in words */
-    NULL,   /* Task input parameter */
-    0,      /* Priority of the task */
-    &Task2,   /* Task handle. */
-    1);     /* Core where the task should run */
 }
 
 void loop() {
  
 }
+
+// void app_main(void)
+// {
+
+// }
