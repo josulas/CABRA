@@ -1,14 +1,13 @@
 import sys
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QMainWindow, QApplication
 import pyqtgraph as pg
 
-uiclass, baseclass = pg.Qt.loadUiType("template.ui")
-
-class MainWindow(uiclass, baseclass):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setupUi(self)
+        self.widget = pg.PlotWidget()
         freqs = [10, 100, 1000, 10000]
+        self.setCentralWidget(self.widget)
         self.widget.plot(freqs,
                          [4, 5, 4, 3],
                          pen='red',
@@ -16,7 +15,7 @@ class MainWindow(uiclass, baseclass):
         self.widget.setLogMode(x=True, y=False)
         self.widget.setXRange(1, 4)
         self.widget.showGrid(x=True, y=True, alpha=0.3)
-
+        
 def main():
     app = QApplication(sys.argv)
     window = MainWindow()
