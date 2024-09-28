@@ -1,0 +1,62 @@
+void control(void *pvParameters) {
+  Serial.println("Control Task Started");
+  // Fast timer for sound and ADC
+  for (;;){
+    for (;;){
+      if (SerialBT.available()) {
+        String incomming = SerialBT.readString();
+        incomming.trim();
+        if (incomming == "exit") {
+          bufferFile.close();
+          SD.remove(filename);
+          return;
+        }
+        if (incomming.length() > 0) {
+          freq = incomming[0];
+        } else {
+          Serial.println("Error: Empty command received.");
+          continue;
+        }
+        if (freq < '0' || freq > '5') {
+          Serial.println("Invalid frequency index");
+          continue;
+        }
+        break;
+      }
+      vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    bufferFile = SD.open(filename, "w");
+    if (!bufferFile) {
+      Serial.printf("Error opening %s.\n", filename);
+      return;
+    }
+    clicksdone = false;
+    adcRead = 0;
+    Serial.println("Starting the burst");
+    Serial2.write(freq);
+    // vTaskDelay((NCLICKS * CLICKDURATION + 100)/ portTICK_PERIOD_MS);
+    // if (adcBufferIdx > 0){
+    //   adcBufferIdx = 0;
+    //   bufferA = !bufferA;
+    //   // writeFile();
+    //   // SendViaBT();
+    //   buffersSent++;
+    //   bufferA = true;
+    // }
+    while (!clicksdone) {
+      vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+    bufferFile.close();
+    // Serial.printf("Burst done. %d buffers sent\n", buffersSent);
+    Serial.printf("Burst done. The ADC was called %d times\n", adcRead);
+    buffersSent = 0;
+    
+    if (!clicksdone) {
+      Serial.println("Error: Clicks not done");
+      return;
+    }
+    // Serial.println("Burst done. Sending the data through bluetooth");
+    // sendDataBT();
+    Serial.println("Waiting for the next command"); 
+  }
+}
