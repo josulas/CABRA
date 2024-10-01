@@ -3,34 +3,40 @@
 #include "freertos/semphr.h"
 #include <driver/dac.h>
 #include <SPI.h>
-#include <SD.h>
+// #include <SD.h>
+#include <SDfat.h>
 
 #define NCLICKS 100
 #define CLICKDURATION 30 // ms
 #define SAMPLERATE 10000 // Hz
+#define BUFFERSIZE 2048 // 4KB / 2, since each sample is 2 bytes
 #define INTERRUPT_PIN 22
 #define RXD2 16
 #define TXD2 17
+#define BLUETOOTHBAUD 500000
+#define SENDDATABUFFERSIZE 64
 
 BluetoothSerial SerialBT;
+char sendDataBuffer[SENDDATABUFFERSIZE];
 char freq;
 TaskHandle_t WriteTask;
 hw_timer_t *samplerTimer = NULL;
 
-// SemaphoreHandle_t clickSemaphore = NULL;
 SemaphoreHandle_t waitForFile = NULL;
-SemaphoreHandle_t waitForBufferA = NULL;
-SemaphoreHandle_t waitForBufferB = NULL;
+// SemaphoreHandle_t waitForBufferA = NULL;
+// SemaphoreHandle_t waitForBufferB = NULL;
 volatile bool clicksdone = false;
 
-// SdFat SD;
 File bufferFile;
+SdFat SD;
+const int SD_CS_PIN = SS;  // Use the correct chip select pin, SS is often the default pin for ESP32 boards.
+const uint32_t SPI_SPEED = SD_SCK_MHZ(25);  // 25 MHz is a good speed for most SD cards
 const String filename = "/~.temp";
 bool bufferA = true;
 
 // ADC related variables
-volatile uint16_t adcBufferA[256];
-volatile uint16_t adcBufferB[256];
+volatile uint16_t adcBufferA[BUFFERSIZE];
+volatile uint16_t adcBufferB[BUFFERSIZE];
 // uint8_t writeBuffer[512];
 volatile uint buffersSent = 0;
 volatile uint adcRead = 0;
@@ -39,38 +45,40 @@ volatile uint16_t readVal = 0;
 
 void writeFile(){
   if (bufferA){
-    if (xSemaphoreTake(waitForBufferB, portMAX_DELAY) == pdTRUE) {
-      // memcpy(writeBuffer, adcBufferB, 512);
-      bufferFile.write((uint8_t *) adcBufferB, 512);
-      xSemaphoreGive(waitForBufferB);
-    }
+    bufferFile.write((uint8_t *) adcBufferB, BUFFERSIZE * 2);
+    // if (xSemaphoreTake(waitForBufferB, portMAX_DELAY) == pdTRUE) {
+    //   // memcpy(writeBuffer, adcBufferB, 512);
+      
+    //   xSemaphoreGive(waitForBufferB);
+    // }
   }
   else{
-    if (xSemaphoreTake(waitForBufferA, portMAX_DELAY) == pdTRUE) {
-      // memcpy(writeBuffer, adcBufferA, 512);
-      bufferFile.write((uint8_t *) adcBufferA, 512);
-      xSemaphoreGive(waitForBufferA);
-    }
+    bufferFile.write((uint8_t *) adcBufferA, BUFFERSIZE * 2);
+    // if (xSemaphoreTake(waitForBufferA, portMAX_DELAY) == pdTRUE) {
+    //   // memcpy(writeBuffer, adcBufferA, 512);
+      
+    //   xSemaphoreGive(waitForBufferA);
+    // }
   }
 }
 
-void SendViaBT(){
-  if (bufferA){
-    if (xSemaphoreTake(waitForBufferB, portMAX_DELAY) == pdTRUE) {
-      // memcpy(writeBuffer, adcBufferB, 512);
-      SerialBT.write((uint8_t *) adcBufferB, 512);
-      // bufferFile.write((uint8_t *) adcBufferB, 512);
-      xSemaphoreGive(waitForBufferB);
-    }
-  }
-  else{
-    if (xSemaphoreTake(waitForBufferA, portMAX_DELAY) == pdTRUE) {
-      // memcpy(writeBuffer, adcBufferA, 512);
-      SerialBT.write((uint8_t *) adcBufferA, 512);
-      xSemaphoreGive(waitForBufferA);
-    }
-  }
-}
+// void SendViaBT(){
+//   if (bufferA){
+//     if (xSemaphoreTake(waitForBufferB, portMAX_DELAY) == pdTRUE) {
+//       // memcpy(writeBuffer, adcBufferB, 512);
+//       SerialBT.write((uint8_t *) adcBufferB, 512);
+//       // bufferFile.write((uint8_t *) adcBufferB, 512);
+//       xSemaphoreGive(waitForBufferB);
+//     }
+//   }
+//   else{
+//     if (xSemaphoreTake(waitForBufferA, portMAX_DELAY) == pdTRUE) {
+//       // memcpy(writeBuffer, adcBufferA, 512);
+//       SerialBT.write((uint8_t *) adcBufferA, 512);
+//       xSemaphoreGive(waitForBufferA);
+//     }
+//   }
+// }
 
 void readADC()
 {
@@ -98,7 +106,7 @@ void readADC()
     //   ESP.restart();
     // }
   }
-  if (adcBufferIdx == 256){
+  if (adcBufferIdx == BUFFERSIZE){
     bufferA = !bufferA;
     adcBufferIdx = 0;
     vTaskResume(WriteTask);
@@ -122,10 +130,9 @@ void IRAM_ATTR startSampling(){
 }
 
 void sendDataBT(){
-  char data[64];
   if (xSemaphoreTake(waitForFile, portMAX_DELAY) == pdTRUE) {
     // bufferFile.seek(0);
-    bufferFile = SD.open(filename, "r");
+    bufferFile = SD.open(filename, FILE_READ);
     uint bytes_sent = 0;
     bool finished = false;
     size_t remaining;
@@ -135,16 +142,13 @@ void sendDataBT(){
         finished = true;
         break;
       }
-      if (! remaining % 1024){
-        Serial.printf("Remaining: %dkB\n", remaining / 1024);
-      }
-      if (remaining >= 64){
-        bufferFile.readBytes(data, 64);
-        SerialBT.write((uint8_t *) data, 64);
-        bytes_sent += 64;
+      if (remaining >= SENDDATABUFFERSIZE){
+        bufferFile.readBytes(sendDataBuffer, SENDDATABUFFERSIZE);
+        SerialBT.write((uint8_t *) sendDataBuffer, SENDDATABUFFERSIZE);
+        bytes_sent += SENDDATABUFFERSIZE;
       } else {
-        bufferFile.readBytes(data, remaining);
-        SerialBT.write((uint8_t *) data, remaining);
+        bufferFile.readBytes(sendDataBuffer, remaining);
+        SerialBT.write((uint8_t *) sendDataBuffer, remaining);
         bytes_sent += remaining;
       }
     }
@@ -173,13 +177,17 @@ void setup() {
 
   // Serial port config
   Serial.begin(115200);  // Initialize Serial communication only once
-  SerialBT.begin(250000);
+  SerialBT.begin(BLUETOOTHBAUD);
   SerialBT.begin("CABRA");  // Bluetooth device name
   Serial.println("The device started, now you can pair it with bluetooth!");
 
   // SD card config
   Serial.print("Initializing SD card...");
-  if (!SD.begin(SS)) {
+  // if (!SD.begin(SS)) {
+  //   Serial.println("initialization failed!");
+  //   return;
+  // }
+  if (!SD.begin(SD_CS_PIN, SPI_SPEED)) {
     Serial.println("initialization failed!");
     return;
   }
@@ -194,13 +202,13 @@ void setup() {
 
   // Semaphore creation
   waitForFile = xSemaphoreCreateBinary();
-  waitForBufferA = xSemaphoreCreateBinary();
-  waitForBufferB = xSemaphoreCreateBinary();
+  // waitForBufferA = xSemaphoreCreateBinary();
+  // waitForBufferB = xSemaphoreCreateBinary();
   // Semaphore initialization
-  xSemaphoreGive(waitForBufferA);
-  xSemaphoreGive(waitForBufferB);
   xSemaphoreGive(waitForFile);
-
+  // xSemaphoreGive(waitForBufferA);
+  // xSemaphoreGive(waitForBufferB);
+  
   // Timer configuration
   samplerTimer = timerBegin(0, 80, true);    // 80 MHz / 800 = 1 MHz
   timerAttachInterrupt(samplerTimer, &samplerTimerISER, true);
@@ -251,7 +259,7 @@ void loop() {
     }
     // vTaskDelay(1 / portTICK_PERIOD_MS);
   }
-  bufferFile = SD.open(filename, "w");
+  bufferFile = SD.open(filename, O_WRITE | O_TRUNC);
   if (!bufferFile) {
     Serial.printf("Error opening %s.\n", filename);
     return;
@@ -264,6 +272,9 @@ void loop() {
   adcBufferIdx = 0;
   bufferA = true;
   Serial.println("Starting the burst");
+  Serial.flush();
+  Serial.end();
+  // SerialBT.end();
   Serial2.write(freq);
   while (!clicksdone) {
     // vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -275,6 +286,8 @@ void loop() {
     buffersSent++;
   }
   bufferFile.close();
+  Serial.begin(115200);
+  // SerialBT.begin(BLUETOOTHBAUD);
   Serial.printf("Burst done. The ADC was called %d times and %d buffers were written.\n", adcRead, buffersSent);
   
   if (!clicksdone) {
