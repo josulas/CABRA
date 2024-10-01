@@ -6,7 +6,7 @@
 // #include <SD.h>
 #include <SDfat.h>
 
-#define NCLICKS 100
+#define NCLICKS 2000
 #define CLICKDURATION 30 // ms
 #define SAMPLERATE 10000 // Hz
 #define BUFFERSIZE 2048 // 4KB / 2, since each sample is 2 bytes
@@ -223,6 +223,9 @@ void setup() {
   //   1,      /* Priority of the task */
   //   &Task1,   /* Task handle. */
   //   1);     /* Core where the task should run */
+
+  // ADC configuration
+  // analogSetAttenuation(ADC_0db);
 
   // Create a task that will write the data to the SD card
   xTaskCreatePinnedToCore(
