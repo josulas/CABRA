@@ -11,6 +11,7 @@
 #define TXD2 17
 #define CONTROLSERIALBAUD 115200
 #define TRANSMISSIOSERIALBAUD 250000
+#define READPIN 4
 
 // Task related variables
 TaskHandle_t sendTask;
@@ -28,6 +29,7 @@ volatile uint16_t readVal = 0;
 
 
 void sendBuffer(){
+  // Choose the right bufffer, which is not in use by the ADC
   if (bufferA){
     // Send the buffer to the Raspberry Pi
     Serial2.write((uint8_t *) adcBufferA, BUFFERSIZE * 2);
@@ -36,6 +38,7 @@ void sendBuffer(){
 
   }
   else{
+    // Send the buffer to the Raspberry Pi
     Serial2.write((uint8_t *) adcBufferB, BUFFERSIZE * 2);
     // Make sure everything is received
     Serial2.flush();
@@ -45,7 +48,7 @@ void sendBuffer(){
 
 void readADC(){
   // Read ADC value and write it to the SD card
-  readVal = analogRead(A0);
+  readVal = analogRead(READPIN);
   if (bufferA){
     adcBufferA[adcBufferIdx++] = readVal;
   }
@@ -90,7 +93,7 @@ void sendDataTask(void *pvParameters){
 void setup(){
   // Pin configuration
   pinMode(INTERRUPT_PIN, INPUT);    // Interrupt pin
-  pinMode(A0, INPUT);               // ADC pin
+  pinMode(READPIN, INPUT);               // ADC pin
 
   // Serial for control and logging
   Serial.begin(CONTROLSERIALBAUD);
