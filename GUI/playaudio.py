@@ -1,6 +1,5 @@
 import simpleaudio as sa
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 
 NCLICKS = 2000  
@@ -72,8 +71,6 @@ class Clicker(object):
 if __name__ == "__main__":
     clicker = Clicker(freq=8000, nclicks=100)
     t = np.linspace(0, CYCLE_DURATION/1000, int(CYCLE_DURATION/1000 * SAMPLINGRATE), False)
-    plt.plot(t, clicker.single_cycle)
-    plt.show()
     a = time.time()
     clicker.playToneBurst()
     b = time.time()
