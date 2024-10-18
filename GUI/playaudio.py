@@ -11,12 +11,14 @@ MAXINT16 = 2**15 - 1 # Maximum value for a 16-bit integer
 class Clicker(object):
     def __init__(self, 
                  freq: int=1000,
-                 duration: int=CLICK_DURATION,
+                 cycle_duration: int=CYCLE_DURATION,
+                 click_duration: int=CLICK_DURATION,
                  samplingrate: int=SAMPLINGRATE,
                  nclicks: int = NCLICKS,
                  smooth_period: float=0.05):
         self.freq = freq
-        self.duration = duration # ms
+        self.cycle_duration = cycle_duration # ms
+        self.click_duration = click_duration # ms
         self.samplingrate = samplingrate
         self.nclicks = nclicks
         self.smooth_period = smooth_period
@@ -32,11 +34,11 @@ class Clicker(object):
             duration (int): duration of the click in ms
             samplingrate (int): sampling rate of the click in Hz
             smooth (bool, optional): Indicates if the click should be smoothed. Defaults to True.
-
+hh
         Returns:
             np.ndarray: an array with the click
         """
-        t = np.linspace(0, self.duration/1000, int(self.duration/1000 * self.samplingrate), False)
+        t = np.linspace(0, self.click_duration/1000, int(self.click_duration/1000 * self.samplingrate), False)
         click = np.sin(2 * np.pi * self.freq * t)
         if smooth:
             click[:int(self.smooth_period * len(click))] *= np.linspace(0, 1, int(self.smooth_period * len(click)), False)
@@ -49,7 +51,7 @@ class Clicker(object):
         Returns:
             np.ndarray: an array with the single cycle
         """
-        return np.concatenate([self.single_click, np.zeros(int((CYCLE_DURATION - CLICK_DURATION) / 1000 * self.samplingrate), np.int16)])
+        return np.concatenate([self.single_click, np.zeros(int((self.cycle_duration - self.click_duration) / 1000 * self.samplingrate), np.int16)])
 
 
     def getToneBurst(self) -> np.ndarray:
