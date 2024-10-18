@@ -2,17 +2,16 @@ import time
 from serial import Serial
 import serial.tools.list_ports
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.signal as signal
-
+import RPi.GPIO as GPIO
 
 # Board parameters
-BAUDRATE = 500000
+BAUDRATE = 250000
 NCLICKS = 2000
 CLICKDURATION = 30 # ms (including pause)
 SAMPLINGRATE = 10000 # Hz
 BYTESPERSAMPLE = 2
-BUFFERSIZE = 2048
+BUFFERSIZE = 128
 EEGRANGE = 5e-6 # Vpp
 SIGNALRANGE = 1 # Vpp
 ADCRESOLUTION = 12 # bits
@@ -23,6 +22,12 @@ ADCRANGE = ADCMAX - ADCMIN
 THRESHOLDV = 40e-6
 GAIN = 22000 / 4 # SIGNALRANGE / EEGRANGE
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
+INTERRUPTION_PIN = 11
+
+# PIN SETUP
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(INTERRUPTION_PIN, GPIO.OUT)
+GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
 
 # Functions
 def average_EEG(X: np.ndarray, mode: str='homgenous') -> np.ndarray:
@@ -76,18 +81,17 @@ waitingTime = CLICKDURATION / 1000.0 * NCLICKS
 connectionPort = None
 ports = serial.tools.list_ports.comports()
 for port, desc, hwid in sorted(ports):
-    if "Standard Serial over Bluetooth link" in desc:
+    if 'tty' in desc:
         connectionPort = port
-        break
 if connectionPort is None:
-    raise RuntimeError("No Bluetooth connection found")
+    raise RuntimeError("No serial connection found")
 
 # FILTER DESIGN
 # Definición de parámetros
 alpha_s = 45  # atenuación en dB de la banda de rechazo
 DeltaF = 10  # Ancho de la ventana
 bandpass_iir = signal.iirdesign([150, 3000], [150 - DeltaF, 3000 + DeltaF], .2, alpha_s, fs=SAMPLINGRATE, output='sos')
-
+frequencies = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
 
 # Initialize the serial connection
 ser = Serial(connectionPort, BAUDRATE, timeout=None)
@@ -95,20 +99,16 @@ time.sleep(2)  # Allow time for connection to establish
 try:
     while True:
         # Sending data to ESP32
-        message = input("Enter a command to send (digit between 0 and 5): ")
-        while len(message) != 1 or not message.isdigit() or int(message) < 0 or int(message) > 5:
-            print("Invalid input. Please enter a digit between 0 and 5.")
-            message = input("Enter a command to send (digit between 0 and 5): ")
-        ser.write(message.encode('utf-8'))  # Send the message
-        # ser.close()
-        # time.sleep(waitingTime)
-        # try:
-        #     ser.open()
-        # except Exception as e:
-        #     print("Error opening the serial port: ", e)
-        #     exit(1)
+        print('Available frequencies:', frequencies)
+        option = input("Choose a frequency index (digit between 0 and 5): ")
+        while len(option) != 1 or not option.isdigit() or int(option) < 0 or int(option) > 5:
+            print(f"Invalid input ({option}). Please enter a digit between 0 and 5.")
+        frequency = frequencies[int(option)]
+        # TODO: reproduce audio
+        GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
         binaryData = ser.read(nBytes)
         # convert the binary data to a numpy array. Remember we have an uint16 each 2 bytes
+        GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
         data = np.frombuffer(binaryData, dtype=np.uint16)[:nUsefulSamples]
         # Reshape the data. We have NCLICKS clicks, each one with CLICKDURATION ms / 1000 * SAMPLINGRATE samples
         data = data.reshape((NCLICKS, int(CLICKDURATION / 1000 * SAMPLINGRATE))).astype(np.float64)
@@ -122,8 +122,7 @@ try:
         # get the evoked potential using an smart average
         evoked_potential = average_EEG(useful_data, mode='both')
         # plot the data and wait for the user to close the plot
-        plt.plot(xvals, evoked_potential)
-        plt.show()
+        
             
 except KeyboardInterrupt:
     print("\nExiting the program.\n")
