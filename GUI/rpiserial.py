@@ -4,11 +4,13 @@ import serial.tools.list_ports
 import numpy as np
 import scipy.signal as signal
 import RPi.GPIO as GPIO
+from playaudio import Clicker
 
 # Board parameters
 BAUDRATE = 250000
 NCLICKS = 2000
-CLICKDURATION = 30 # ms (including pause)
+CYCLEDURATION = 30 # ms (including pause)
+CLICKDURATION = 10 #ms
 SAMPLINGRATE = 10000 # Hz
 BYTESPERSAMPLE = 2
 BUFFERSIZE = 128
@@ -72,11 +74,11 @@ def average_EEG(X: np.ndarray, mode: str='homgenous') -> np.ndarray:
     return w.T.dot(X/np.sum(w))
 
 # calculate the number of bytes to receive
-nBytes = int(np.ceil(NCLICKS * CLICKDURATION / 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE * BYTESPERSAMPLE
-nUsefulSamples = int(NCLICKS * CLICKDURATION / 1000.0 * SAMPLINGRATE)
-clickNumberOfSamples = int(CLICKDURATION / 1000.0 * SAMPLINGRATE)
-xvals = np.arange(0, clickNumberOfSamples, 1) * CLICKDURATION / clickNumberOfSamples # ms
-waitingTime = CLICKDURATION / 1000.0 * NCLICKS
+nBytes = int(np.ceil(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE * BYTESPERSAMPLE
+nUsefulSamples = int(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE)
+clickNumberOfSamples = int(CYCLEDURATION / 1000.0 * SAMPLINGRATE)
+xvals = np.arange(0, clickNumberOfSamples, 1) * CYCLEDURATION / clickNumberOfSamples # ms
+waitingTime = CYCLEDURATION / 1000.0 * NCLICKS
 # Search for the appropriate port via bluetooth
 connectionPort = None
 ports = serial.tools.list_ports.comports()
@@ -104,14 +106,15 @@ try:
         while len(option) != 1 or not option.isdigit() or int(option) < 0 or int(option) > 5:
             print(f"Invalid input ({option}). Please enter a digit between 0 and 5.")
         frequency = frequencies[int(option)]
-        # TODO: reproduce audio
+        burst = Clicker(freq=frequency, click_duration=CLICKDURATION, cycle_duration=CYCLEDURATION, nclicks=NCLICKS)
+        burst.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
         binaryData = ser.read(nBytes)
         # convert the binary data to a numpy array. Remember we have an uint16 each 2 bytes
         GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
         data = np.frombuffer(binaryData, dtype=np.uint16)[:nUsefulSamples]
-        # Reshape the data. We have NCLICKS clicks, each one with CLICKDURATION ms / 1000 * SAMPLINGRATE samples
-        data = data.reshape((NCLICKS, int(CLICKDURATION / 1000 * SAMPLINGRATE))).astype(np.float64)
+        # Reshape the data. We have NCLICKS clicks, each one with CYCLEDURATION ms / 1000 * SAMPLINGRATE samples
+        data = data.reshape((NCLICKS, int(CYCLEDURATION / 1000 * SAMPLINGRATE))).astype(np.float64)
         # Filter each click
         for repetition in range(NCLICKS):
             data[repetition] = signal.sosfilt(bandpass_iir, data[repetition])
@@ -128,3 +131,4 @@ except KeyboardInterrupt:
     print("\nExiting the program.\n")
 finally:
     ser.close()  # Close the serial connection when done
+    GPIO.cleanup()
