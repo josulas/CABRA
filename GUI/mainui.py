@@ -12,11 +12,11 @@ class MainWindow(uiclass, baseclass):
         self.widget.plot(data, pen='red')
         self.widget.showGrid(x=True, y=True, alpha=0.3)
 
-def main():
+def run_ui(data):
     app = QApplication(sys.argv)
-    window = MainWindow(data=np.linspace(0, 100, 10))
+    window = MainWindow(data)
     window.show()
     app.exec()
 
 if __name__ == '__main__':
-    main()
+    run_ui(data=np.linspace(0, 100, 10))

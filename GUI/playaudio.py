@@ -1,6 +1,7 @@
 import simpleaudio as sa
 import numpy as np
 import time
+from mainui import MainWindow, run_ui
 
 NCLICKS = 2000  
 CYCLE_DURATION = 30 # ms (including pause)
@@ -71,9 +72,7 @@ hh
         play_obj.wait_done() if wait else None
 
 if __name__ == "__main__":
-    clicker = Clicker(freq=8000, nclicks=100)
+    clicker = Clicker(freq=250, nclicks=10)
     t = np.linspace(0, CYCLE_DURATION/1000, int(CYCLE_DURATION/1000 * SAMPLINGRATE), False)
-    a = time.time()
-    clicker.playToneBurst()
-    b = time.time()
-    print((b - a) * 1000)
+    data = clicker.tone_burst
+    run_ui(data)
