@@ -1,5 +1,5 @@
 import sys
-from PySide6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication
 import pyqtgraph as pg
 import numpy as np
 

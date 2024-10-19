@@ -7,8 +7,8 @@ import RPi.GPIO as GPIO
 from playaudio import Clicker
 
 # Board parameters
-BAUDRATE = 250000
-NCLICKS = 2000
+BAUDRATE = 960000
+NCLICKS = 100
 CYCLEDURATION = 30 # ms (including pause)
 CLICKDURATION = 10 #ms
 SAMPLINGRATE = 10000 # Hz
@@ -105,6 +105,7 @@ try:
         option = input("Choose a frequency index (digit between 0 and 5): ")
         while len(option) != 1 or not option.isdigit() or int(option) < 0 or int(option) > 5:
             print(f"Invalid input ({option}). Please enter a digit between 0 and 5.")
+            option = input("Choose a frequency index (digit between 0 and 5): ")
         frequency = frequencies[int(option)]
         burst = Clicker(freq=frequency, click_duration=CLICKDURATION, cycle_duration=CYCLEDURATION, nclicks=NCLICKS)
         burst.playToneBurst(False)
