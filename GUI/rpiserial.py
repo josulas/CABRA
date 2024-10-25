@@ -75,6 +75,7 @@ def average_EEG(X: np.ndarray, mode: str='homgenous') -> np.ndarray:
 
 # calculate the number of bytes to receive
 nBytes = int(np.ceil(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE * BYTESPERSAMPLE
+print(nBytes / 2)
 nUsefulSamples = int(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE)
 clickNumberOfSamples = int(CYCLEDURATION / 1000.0 * SAMPLINGRATE)
 xvals = np.arange(0, clickNumberOfSamples, 1) * CYCLEDURATION / clickNumberOfSamples # ms
