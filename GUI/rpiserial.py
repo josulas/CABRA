@@ -118,7 +118,7 @@ try:
         data = data.reshape((NCLICKS, int(CYCLEDURATION / 1000 * SAMPLINGRATE))).astype(np.float64)
         # Filter each click
         for repetition in range(NCLICKS):
-            data[repetition] = signal.sosfilt(bandpass_iir, data[repetition])
+            data[repetition] = signal.sosfiltfilt(bandpass_iir, data[repetition])
         # Thresholding
         # useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= THRESHOLD]
         useful_data = data
