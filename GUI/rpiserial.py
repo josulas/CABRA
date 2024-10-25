@@ -120,11 +120,13 @@ try:
         for repetition in range(NCLICKS):
             data[repetition] = signal.sosfilt(bandpass_iir, data[repetition])
         # Thresholding
-        useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= THRESHOLD]
+        # useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= THRESHOLD]
+        useful_data = data
         # Print the number of useful clicks
         print("Number of useful clicks: ", useful_data.shape[0])
         # get the evoked potential using an smart average
         evoked_potential = average_EEG(useful_data, mode='both')
+        np.save('evoked_test.npy', evoked_potential)
         # plot the data and wait for the user to close the plot
         
             
