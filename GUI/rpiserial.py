@@ -8,7 +8,7 @@ from playaudio import Clicker
 
 # Board parameters
 BAUDRATE = 960000
-NCLICKS = 100
+NCLICKS = 500
 CYCLEDURATION = 30 # ms (including pause)
 CLICKDURATION = 10 #ms
 SAMPLINGRATE = 10000 # Hz

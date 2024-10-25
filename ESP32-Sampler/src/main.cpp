@@ -2,15 +2,15 @@
 // #include "freertos/semphr.h"
 
 // defines
-#define NCLICKS 2000
-#define CLICKDURATION 30 // ms
+#define NCLICKS 500
+#define CYCLEDURATION 30 // ms
 #define SAMPLERATE 10000 // Hz
 #define BUFFERSIZE 128 // 128 samples of 2 bytes each, 256 bytes in total
-#define INTERRUPT_PIN 22
+#define INTERRUPT_PIN 2
 #define RXD2 16
 #define TXD2 17
 #define CONTROLSERIALBAUD 115200
-#define TRANSMISSIOSERIALBAUD 250000
+#define TRANSMISSIOSERIALBAUD 960000
 #define READPIN 4
 
 // Task related variables
@@ -30,18 +30,18 @@ volatile uint16_t readVal = 0;
 
 void sendBuffer(){
   // Choose the right bufffer, which is not in use by the ADC
-  if (bufferA){
+  if (!bufferA){
     // Send the buffer to the Raspberry Pi
     Serial2.write((uint8_t *) adcBufferA, BUFFERSIZE * 2);
     // Make sure everything is received
-    Serial2.flush();
+    // Serial2.flush();
 
   }
   else{
     // Send the buffer to the Raspberry Pi
     Serial2.write((uint8_t *) adcBufferB, BUFFERSIZE * 2);
     // Make sure everything is received
-    Serial2.flush();
+    // Serial2.flush();
   }
 }
 
@@ -64,7 +64,7 @@ void readADC(){
 
 
 void IRAM_ATTR samplerTimerISER(){
-  if (adcRead >= SAMPLERATE * NCLICKS * CLICKDURATION / 1000){
+  if (adcRead >= SAMPLERATE * NCLICKS * CYCLEDURATION / 1000){
     timerAlarmDisable(samplerTimer);
     clicksdone = true;
   }
@@ -92,7 +92,7 @@ void sendDataTask(void *pvParameters){
 
 void setup(){
   // Pin configuration
-  pinMode(INTERRUPT_PIN, INPUT);    // Interrupt pin
+  pinMode(INTERRUPT_PIN, INPUT_PULLUP);    // Interrupt pin
   pinMode(READPIN, INPUT);               // ADC pin
 
   // Serial for control and logging
@@ -125,6 +125,9 @@ void setup(){
     0,      /* Priority of the task */
     &sendTask,   /* Task handle. */
     0);     /* Core where the task should run */
+
+  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), startSampling, RISING);
+  
 }
 
 
@@ -140,12 +143,10 @@ void loop(){
   clicksdone = false;
   adcBufferIdx = 0;
   bufferA = true;
-  // Enable interruption
-  attachInterrupt(INTERRUPT_PIN, startSampling, RISING);
   // Wait for the sampling and sending to finish
   while (!clicksdone) {}
   // Disable interruption
-  detachInterrupt(INTERRUPT_PIN);
+  // detachInterrupt(INTERRUPT_PIN);
   // Send the last buffer, if it is not empty
   if (adcBufferIdx > 0){
     bufferA = !bufferA;
@@ -155,5 +156,6 @@ void loop(){
   // Re-enable control serial communication
   Serial.begin(CONTROLSERIALBAUD);
   // Print log
-  Serial.printf("Burst done. The ADC was called %d times and %d buffers were written.\n", adcRead, buffersSent);
+  Serial.printf("Burst done. The ADC was called %d times and %d buffers were sent.\n", adcRead, buffersSent);
+  ESP.restart();
 }
