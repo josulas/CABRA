@@ -22,7 +22,7 @@ ADCMAX = 3.3 # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
 THRESHOLDV = 40e-6
-GAIN = 22000 / 4 # SIGNALRANGE / EEGRANGE
+GAIN = 30000 / 4 # SIGNALRANGE / EEGRANGE
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 INTERRUPTION_PIN = 11
 
@@ -121,8 +121,8 @@ try:
         for repetition in range(NCLICKS):
             data[repetition] = signal.sosfiltfilt(bandpass_iir, data[repetition])
         # Thresholding
-        # useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= THRESHOLD]
-        useful_data = data
+        useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= THRESHOLD]
+        # useful_data = data
         # Print the number of useful clicks
         print("Number of useful clicks: ", useful_data.shape[0])
         # get the evoked potential using an smart average

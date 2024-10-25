@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
         self.time = np.linspace(0, CLICK_DURATION, len(data))
         self.setCentralWidget(self.widget)
         self.widget.plot(self.time, data, pen='red')
-        self.widget.setYRange(-200, 200, padding=0.5)
+        # self.widget.setYRange(-200, 200, padding=0.5)
         self.widget.showGrid(x=True, y=True, alpha=0.3)
         
 def main():
