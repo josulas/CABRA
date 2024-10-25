@@ -3,3 +3,4 @@ simpleaudio
 scipy
 pyqtgraph
 pyserial
+pyqt5
