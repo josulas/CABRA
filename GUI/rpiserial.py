@@ -4,7 +4,9 @@ import serial.tools.list_ports
 import numpy as np
 import scipy.signal as signal
 import RPi.GPIO as GPIO
+from average_eeg import average_EEG
 from playaudio import Clicker
+from datetime import datetime
 
 # Board parameters
 BAUDRATE = 960000
@@ -31,108 +33,175 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setup(INTERRUPTION_PIN, GPIO.OUT)
 GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
 
-# Functions
-def average_EEG(X: np.ndarray, mode: str='homgenous') -> np.ndarray:
-    """
-    Performs a weighted or unweighted average of series of ERP EEG signals
+class RPISerial:
+    def __init__(self,
+                 clicker: Clicker = None,
+                 port: str | None = None,
+                 baudrate: int = BAUDRATE,
+                 sampling_rate: int = SAMPLINGRATE,
+                 buffersize: int = SAMPLINGRATE,
+                 bytessample: int = BYTESPERSAMPLE,
+                 frequencies: dict[int, int] = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000},
+                 alpha_s: int = 45,
+                 DeltaF: int = 10,
+                 f_pass: int = 150,
+                 f_stop: int = 3000,
+                 amplitude_threshold: float = THRESHOLD):
+        """
+        Initializes the serial connection with the ESP32
+        :param port: USB port where the ESP32 is connected. Can be found automatically if None
+        :param baudrate: Baud rate for the serial connection
+        :param sampling_rate: Sampling frequency for the ESP
+        :param buffersize: Samples per buffer
+        :param bytessample: Bytes per sample
+        """
+        self.clicker = clicker
 
-    Args:
-        X (np.ndarray): NxM matrix where every row is a new experiment and every column is a new sample
-        mode (str, optional): Indicates how to perform the average. Could be:
-            - homogenous: simple, unweighted average
-            - amp: weight by amplitude
-            - var: weight by variance
-            - both: weight by both amplitude and variance
-        Defaults to 'homogenous'.
+        # Serial connection
+        if port is None:
+            port = self._find_port()
+        self.port = port
+        self.baudrate = baudrate
+        self.sampling_rate = sampling_rate
+        self.buffersize = buffersize
+        self.bytessample = bytessample
+        self.serial = Serial(port, baudrate, timeout=None)
+        time.sleep(2)  # Allow time for connection to establish
 
-    Returns:
-        np.ndarray: an Mx1 array with the averaged signals
-    """
-    VALID_MODE = {'homogenous', 'amp', 'var', 'both'}
-    if mode not in {'homogenous', 'amp', 'var', 'both'}:
-        raise ValueError(F"{mode} is not a valid mode. Should be: {''.join(VALID_MODE)}")
+        # Calculated parameters
+        self.nbytes = int(np.ceil(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE * BYTESPERSAMPLE
+        self.nusefulsamples = int(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE)
+        self.clicknumberofsamples = int(CYCLEDURATION / 1000.0 * SAMPLINGRATE)
+        self.xvals = np.arange(0, self.clicknumberofsamples, 1) * CYCLEDURATION / self.clicknumberofsamples # ms
+        self.waitingtime = CYCLEDURATION / 1000.0 * NCLICKS
 
-    elif mode == 'homogenous':
-        return np.mean(X, axis=0)
-    
-    # Find amplitudes
-    s = np.mean(X, axis = 0)
-    a = X.dot(s.T)
+        # Filter design
+        self.frequencies = frequencies
+        self.alpha_s = alpha_s
+        self.DeltaF = DeltaF
+        self.f_pass = f_pass
+        self.f_stop = f_stop
+        self.bandpass_iir = self._init_filter()
 
-    # Find variances
-    M = X.shape[1]
-    V = np.var(X[:, -int(0.4*M):], axis=1)
+        # Data acquisition
+        self.threshold = amplitude_threshold
+        self.data = None
+        self.averaged_data = None
 
-    # Get weights and average
-    if mode == 'amp':
-        w = a / np.sum(a**2)
-    elif mode == 'var':
-        w = (1/V) / (np.sum(1/V))
-    elif mode == 'both':
-        w = (a/V) / (np.sum(a**2/V))
-    
-    return w.T.dot(X/np.sum(w))
+    @staticmethod
+    def _find_port() -> str:
+        """
+        Automatically detect USB for the ESP32
+        :return:
+        """
+        ports = serial.tools.list_ports.comports()
+        for port, desc, hwid in sorted(ports):
+            if 'tty' in desc:
+                return port
 
-# calculate the number of bytes to receive
-nBytes = int(np.ceil(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE * BYTESPERSAMPLE
-print(nBytes / 2)
-nUsefulSamples = int(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE)
-clickNumberOfSamples = int(CYCLEDURATION / 1000.0 * SAMPLINGRATE)
-xvals = np.arange(0, clickNumberOfSamples, 1) * CYCLEDURATION / clickNumberOfSamples # ms
-waitingTime = CYCLEDURATION / 1000.0 * NCLICKS
-# Search for the appropriate port via bluetooth
-connectionPort = None
-ports = serial.tools.list_ports.comports()
-for port, desc, hwid in sorted(ports):
-    if 'tty' in desc:
-        connectionPort = port
-if connectionPort is None:
-    raise RuntimeError("No serial connection found")
+    def _init_filter(self) -> np.ndarray:
+        """
+        Initialize the filter design
+        :return: IIR filter coefficients
+        """
+        bandpass_iir = signal.iirdesign([self.f_pass, self.f_stop],
+                                        [self.f_pass - self.DeltaF, self.f_stop + self.DeltaF],
+                                        .2,
+                                        self.alpha_s,
+                                        fs=self.sampling_rate,
+                                        output='sos')
+        return bandpass_iir
 
-# FILTER DESIGN
-# Definición de parámetros
-alpha_s = 45  # atenuación en dB de la banda de rechazo
-DeltaF = 10  # Ancho de la ventana
-bandpass_iir = signal.iirdesign([150, 3000], [150 - DeltaF, 3000 + DeltaF], .2, alpha_s, fs=SAMPLINGRATE, output='sos')
-frequencies = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
+    def record_data(self) -> np.ndarray:
+        """
+        Record data from the ESP32
+        :return: numpy array with the recorded data
+        """
+        assert self.clicker is not None, "Clicker not set"
 
-# Initialize the serial connection
-ser = Serial(connectionPort, BAUDRATE, timeout=None)
-time.sleep(2)  # Allow time for connection to establish
-try:
-    while True:
-        # Sending data to ESP32
-        print('Available frequencies:', frequencies)
-        option = input("Choose a frequency index (digit between 0 and 5): ")
-        while len(option) != 1 or not option.isdigit() or int(option) < 0 or int(option) > 5:
-            print(f"Invalid input ({option}). Please enter a digit between 0 and 5.")
-            option = input("Choose a frequency index (digit between 0 and 5): ")
-        frequency = frequencies[int(option)]
-        burst = Clicker(freq=frequency, click_duration=CLICKDURATION, cycle_duration=CYCLEDURATION, nclicks=NCLICKS)
-        burst.playToneBurst(False)
+        self.clicker.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
-        binaryData = ser.read(nBytes)
-        # convert the binary data to a numpy array. Remember we have an uint16 each 2 bytes
+        binary_data = self.serial.read(self.nbytes)
         GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
-        data = np.frombuffer(binaryData, dtype=np.uint16)[:nUsefulSamples]
-        # Reshape the data. We have NCLICKS clicks, each one with CYCLEDURATION ms / 1000 * SAMPLINGRATE samples
+        data = np.frombuffer(binary_data, dtype=np.uint16)[:self.nusefulsamples]
         data = data.reshape((NCLICKS, int(CYCLEDURATION / 1000 * SAMPLINGRATE))).astype(np.float64)
-        # Filter each click
-        for repetition in range(NCLICKS):
-            data[repetition] = signal.sosfiltfilt(bandpass_iir, data[repetition])
-        # Thresholding
-        useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= THRESHOLD]
-        # useful_data = data
-        # Print the number of useful clicks
-        print("Number of useful clicks: ", useful_data.shape[0])
-        # get the evoked potential using an smart average
-        evoked_potential = average_EEG(useful_data, mode='both')
-        np.save('evoked_test.npy', evoked_potential)
-        # plot the data and wait for the user to close the plot
-        
-            
-except KeyboardInterrupt:
-    print("\nExiting the program.\n")
-finally:
-    ser.close()  # Close the serial connection when done
-    GPIO.cleanup()
+        data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
+        useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
+
+        self.data = useful_data
+        return useful_data
+
+    def close(self):
+        """
+        Close the serial connection
+        """
+        self.serial.close()
+
+    def set_clicker(self, clicker: Clicker):
+        """
+        Set the clicker
+        :param clicker: new clicker
+        """
+        self.clicker = clicker
+
+    def get_data_average(self, mode: str='homogenous') -> np.ndarray:
+        """
+        Get the average of the recorded data
+        :param mode: mode for the average
+        :return: averaged data
+        """
+        assert self.data is not None, "No data recorded"
+        averaged_data = average_EEG(self.data, mode=mode)
+        self.averaged_data = averaged_data
+        return averaged_data
+
+    def save_raw_data(self, filename: str):
+        """
+        Save the recorded data to a file
+        :param filename: name of the file
+        """
+        np.save(filename, self.data)
+
+    def save_averaged_data(self, filename: str):
+        """
+        Save the averaged data to a file
+        :param filename: name of the file
+        """
+        np.save(filename, self.averaged_data)
+
+
+def main():
+    try:
+        rpiserial = RPISerial()
+        while True:
+            # Select freq. stimulus
+            print('Available frequencies:', rpiserial.frequencies)
+            option = input(f"Choose a frequency index (digit between 0 and {len(rpiserial.frequencies)}): ")
+            while len(option) != 1 or not option.isdigit() or int(option) < 0 or int(option) > len(rpiserial.frequencies):
+                print(f"Invalid input ({option}). Please enter a digit between 0 and {len(rpiserial.frequencies)}.")
+                option = input(f"Choose a frequency index (digit between 0 and {len(rpiserial.frequencies)}): ")
+
+            frequency = rpiserial.frequencies[int(option)]
+            clicker = Clicker(freq=frequency, click_duration=CLICKDURATION, cycle_duration=CYCLEDURATION, nclicks=NCLICKS)
+            rpiserial.set_clicker(clicker)
+
+            # Extract data and take average
+            data = rpiserial.record_data()
+            print("Number of useful clicks: ", data.shape[0])
+            evoked_potential = rpiserial.get_data_average()
+
+            # Save data
+            f_name = f'{frequency}_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+            np.save(f_name, evoked_potential)
+            print("Data saved to evoked_test.npy")
+
+    except KeyboardInterrupt:
+        print("\nExiting the program.\n")
+    finally:
+        if 'rpiserial' in locals():
+            rpiserial.close()
+        GPIO.cleanup()
+
+
+if __name__ == '__main__':
+    main()
