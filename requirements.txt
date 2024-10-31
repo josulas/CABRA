@@ -4,3 +4,4 @@ scipy
 pyqtgraph
 pyserial
 pyqt5
+RPi.GPIO
