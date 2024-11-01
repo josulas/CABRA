@@ -254,7 +254,7 @@ def manage_input():
             cycle_duration = int(control[6])
             if cycle_duration < click_duration:
                 raise ValueError(F"Cycle duration should be greater than click duration, got {cycle_duration} instead.")
-            return action, [nclicks, freq_index, ear, click_duration, cycle_duration]
+            return action, [nclicks, freq_index, ear, click_dbamp, click_duration, cycle_duration]
         else:
             return action, None
     except ValueError:
