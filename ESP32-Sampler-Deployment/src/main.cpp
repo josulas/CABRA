@@ -116,6 +116,7 @@ void setup(){
 void loop(){
   while(!Serial.available()){}
   n_samples = Serial.parseInt();
+  Serial.flush();
   // Wait for the serial to stop reading data
   attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), startSampling, RISING);
   // For logging purposes

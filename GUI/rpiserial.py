@@ -125,6 +125,8 @@ class ESPSerial:
         """
         ports = serial.tools.list_ports.comports()
         for port, desc, _ in sorted(ports):
+            print(desc)
+        for port, desc, _ in sorted(ports):
             if SERIAL_RECOGNIZER in desc:
                 return port
         raise serial.serialutil.SerialException('ESP not found')
