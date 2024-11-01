@@ -5,21 +5,23 @@ import numpy as np
 import scipy.signal as signal
 import RPi.GPIO as GPIO
 from average_eeg import average_EEG
-from playaudio import Clicker
+from playaudio import Clicker, EarSelect
 from datetime import datetime
+import sys
+import os
 
 # Board parameters
-BAUDRATE = 960000
-NCLICKS = 500
+STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
+BAUDRATE = 960000  # (DO NOT CHANGE)
 CYCLEDURATION = 30 # ms (including pause)
-CLICKDURATION = 10 #ms
-SAMPLINGRATE = 10000 # Hz
-BYTESPERSAMPLE = 2
-BUFFERSIZE = 128
+CLICKDURATION = 10 # ms
+SAMPLINGRATE = 10000 # Hz (DO NOT CHANGE)
+BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
+BUFFERSIZE = 128 # (DO NOT CHANGE)
 EEGRANGE = 5e-6 # Vpp
 SIGNALRANGE = 1 # Vpp
-ADCRESOLUTION = 12 # bits
-QUANTIZATION = 2**ADCRESOLUTION
+ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
+QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.3 # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
@@ -27,14 +29,21 @@ THRESHOLDV = 40e-6
 GAIN = 30000 / 4 # SIGNALRANGE / EEGRANGE
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 INTERRUPTION_PIN = 11
+RESET_ESP_PIN = 12
 OUTPUT_DIR = 'saved_data'
 
-# PIN SETUP
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(INTERRUPTION_PIN, GPIO.OUT)
-GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
 
-class RPISerial:
+class Actions:
+    RECORD = 0
+    RESET = 1
+    EXIT = 2
+    def __iter__(self):
+        yield Actions.RECORD
+        yield Actions.RESET
+        yield Actions.EXIT
+
+
+class ESPSerial:
     def __init__(self,
                  clicker: Clicker = None,
                  port: str | None = None,
@@ -42,9 +51,9 @@ class RPISerial:
                  sampling_rate: int = SAMPLINGRATE,
                  buffersize: int = SAMPLINGRATE,
                  bytessample: int = BYTESPERSAMPLE,
-                 frequencies: dict[int, int] = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000},
+                 audio_frequencies: dict[int, int] = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000},
                  alpha_s: int = 45,
-                 DeltaF: int = 10,
+                 delta_f: int = 10,
                  f_pass: int = 150,
                  f_stop: int = 3000,
                  amplitude_threshold: float = THRESHOLD):
@@ -60,28 +69,27 @@ class RPISerial:
 
         # Serial connection
         if port is None:
-            port = self._find_port()
+            try:
+                port = self._find_port()
+            except serial.serialutil.SerialException:
+                pass
         self.port = port
         self.baudrate = baudrate
         self.sampling_rate = sampling_rate
         self.buffersize = buffersize
         self.bytessample = bytessample
-        self.serial = Serial(port, baudrate, timeout=None)
-        time.sleep(2)  # Allow time for connection to establish
-
-        # Calculated parameters
-        self.nsamples = int(np.ceil(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE 
-        self.nbytes = self.nsamples * BYTESPERSAMPLE
-        print(self.nbytes)
-        self.nusefulsamples = int(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE)
-        self.clicknumberofsamples = int(CYCLEDURATION / 1000.0 * SAMPLINGRATE)
-        self.xvals = np.arange(0, self.clicknumberofsamples, 1) * CYCLEDURATION / self.clicknumberofsamples # ms
-        self.waitingtime = CYCLEDURATION / 1000.0 * NCLICKS
+        self.nclicks = None
+        self.nsamples = None
+        self.nbytes = None
+        self.nusefulsamples = None
+        self.clicknumberofsamples = None
+        self.waitingtime = None
+        self.serial = None
 
         # Filter design
-        self.frequencies = frequencies
+        self.frequencies = audio_frequencies
         self.alpha_s = alpha_s
-        self.DeltaF = DeltaF
+        self.delta_f = delta_f
         self.f_pass = f_pass
         self.f_stop = f_stop
         self.bandpass_iir = self._init_filter()
@@ -91,6 +99,27 @@ class RPISerial:
         self.data = None
         self.averaged_data = None
 
+        # setup GPIO pins
+        self._setup_gpio_pins()
+    
+    @staticmethod
+    def _setup_gpio_pins():
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(INTERRUPTION_PIN, GPIO.OUT)
+        GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
+        GPIO.setup(RESET_ESP_PIN, GPIO.OUT)
+        GPIO.output(RESET_ESP_PIN, GPIO.LOW)
+
+    @staticmethod
+    def reset_esp():
+        GPIO.output(RESET_ESP_PIN, GPIO.HIGH)
+        time.sleep(0.1)
+        GPIO.output(RESET_ESP_PIN, GPIO.LOW)
+    
+    @staticmethod
+    def close_gpio_pins():
+        GPIO.cleanup()
+
     @staticmethod
     def _find_port() -> str:
         """
@@ -98,9 +127,13 @@ class RPISerial:
         :return:
         """
         ports = serial.tools.list_ports.comports()
-        for port, desc, hwid in sorted(ports):
+        for port, desc, _ in sorted(ports):
+            print(desc)
+        sys.exit(0)
+        for port, desc, _ in sorted(ports):
             if 'tty' in desc:
                 return port
+        raise serial.serialutil.SerialException('ESP not found')
 
     def _init_filter(self) -> np.ndarray:
         """
@@ -108,33 +141,47 @@ class RPISerial:
         :return: IIR filter coefficients
         """
         bandpass_iir = signal.iirdesign([self.f_pass, self.f_stop],
-                                        [self.f_pass - self.DeltaF, self.f_stop + self.DeltaF],
+                                        [self.f_pass - self.delta_f, self.f_stop + self.delta_f],
                                         .2,
                                         self.alpha_s,
                                         fs=self.sampling_rate,
                                         output='sos')
         return bandpass_iir
+    
+    def set_serial(self, nclicks: int, cycle_duration: int):
+        if self.port is not None:
+            self.nclicks = nclicks
+            self.nsamples = int(np.ceil(nclicks * cycle_duration/ 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE 
+            self.nbytes = self.nsamples * BYTESPERSAMPLE
+            self.nusefulsamples = int(nclicks * cycle_duration / 1000.0 * SAMPLINGRATE)
+            self.clicknumberofsamples = int(cycle_duration / 1000.0 * SAMPLINGRATE)
+            self.waitingtime = cycle_duration / 1000.0 * nclicks + 5
+            self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
 
     def record_data(self) -> np.ndarray:
         """
         Record data from the ESP32
         :return: numpy array with the recorded data
         """
-        assert self.clicker is not None, "Clicker not set"
+        if self.serial is None:
+            raise RuntimeError("Serial connection not initialized")
+        if self.clicker is None:
+            raise RuntimeError("Clicker object was not set")
 
         self.serial.write(f"{self.nusefulsamples}".encode())
-        time.sleep(1)
+        time.sleep(0.5)
         self.clicker.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
         binary_data = self.serial.read(self.nbytes)
         GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
+        if len(binary_data) != self.nbytes:
+            return False
         data = np.frombuffer(binary_data, dtype=np.uint16)[:self.nusefulsamples]
-        data = data.reshape((NCLICKS, int(CYCLEDURATION / 1000 * SAMPLINGRATE))).astype(np.float64)
+        data = data.reshape((self.nclicks, self.clicknumberofsamples)).astype(np.float64)
         data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
         useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
-
         self.data = useful_data
-        return useful_data
+        return True
 
     def close(self):
         """
@@ -155,7 +202,8 @@ class RPISerial:
         :param mode: mode for the average
         :return: averaged data
         """
-        assert self.data is not None, "No data recorded"
+        if self.data is None:
+            raise RuntimeError("No data recorded")
         averaged_data = average_EEG(self.data, mode=mode)
         self.averaged_data = averaged_data
         return averaged_data
@@ -172,41 +220,93 @@ class RPISerial:
         Save the averaged data to a file
         :param filename: name of the file
         """
-        np.save(f"{OUTPUT_DIR}/{filename}", self.averaged_data)
+        np.save(filename, self.averaged_data)
+
+
+def manage_input():
+    """
+    Data receiving operation
+    arg0: action
+    if arg0 == Actions.RECORD:
+        arg1: nclicks
+        arg2: freq_index
+        arg3: ear
+        arg4: click_dbamp    (db)
+        arg5: click_duration (ms)
+        arg6: cycle_duration (ms)
+    """
+    try:
+        control = sys.stdin.readline().split()
+        action = int(control[0])
+        if action not in list(Actions()):
+            raise ValueError(F"Action should be one of {list(Actions())}, got {action} instead.")
+        if action:
+            nclicks = int(control[1])
+            if nclicks < 1:
+                raise ValueError(F"Number of clicks should be greater than 1, got {nclicks} instead.")
+            freq_index = int(control[2])
+            if freq_index not in STANDARD_FREQUENCIES_DICT:
+                raise ValueError(F"Frequency index should be one of {list(STANDARD_FREQUENCIES_DICT.keys())}, got {freq_index} instead.")
+            ear = int(control[3])
+            if ear not in list(EarSelect()):
+                raise ValueError(F"Ear should be one of {list(EarSelect())}, got {ear} instead.")
+            click_dbamp = int(control[4])
+            if not -10 <= click_dbamp <= 40:
+                raise ValueError(F"Click amplitude should be between -10 and 40 dB, got {click_dbamp} instead.")
+            click_duration = int(control[5])
+            if click_duration < 1:
+                raise ValueError(F"Click duration should be greater than 1, got {click_duration} instead.")
+            cycle_duration = int(control[6])
+            if cycle_duration < click_duration:
+                raise ValueError(F"Cycle duration should be greater than click duration, got {cycle_duration} instead.")
+            return action, [nclicks, freq_index, ear, click_duration, cycle_duration]
+        else:
+            return action, None
+    except ValueError:
+        sys.stderr.write('3')
+        sys.stderr.flush()
+    except KeyboardInterrupt:
+        return True, None
+    except IndexError:
+        sys.stderr.write('3')
+        sys.stderr.flush()
 
 
 def main():
-    try:
-        rpiserial = RPISerial()
-        while True:
-            # Select freq. stimulus
-            print('Available frequencies:', rpiserial.frequencies)
-            option = input(f"Choose a frequency index (digit between 0 and {len(rpiserial.frequencies)}): ")
-            while len(option) != 1 or not option.isdigit() or int(option) < 0 or int(option) > len(rpiserial.frequencies):
-                print(f"Invalid input ({option}). Please enter a digit between 0 and {len(rpiserial.frequencies)}.")
-                option = input(f"Choose a frequency index (digit between 0 and {len(rpiserial.frequencies)}): ")
-
-            frequency = rpiserial.frequencies[int(option)]
-            clicker = Clicker(freq=frequency, click_duration=CLICKDURATION, cycle_duration=CYCLEDURATION, nclicks=NCLICKS)
-            rpiserial.set_clicker(clicker)
-
-            # Extract data and take average
-            data = rpiserial.record_data()
-            print("Number of useful clicks: ", data.shape[0])
-            evoked_potential = rpiserial.get_data_average()
-
-            # Save data
-            f_name = f'{frequency}Hz_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
-            rpiserial.save_averaged_data(f_name)
-            print(f"Data saved to {f_name}.npy")
-
-    except KeyboardInterrupt:
-        print("\nExiting the program.\n")
-    finally:
-        if 'rpiserial' in locals():
-            rpiserial.close()
-        GPIO.cleanup()
-
+    # PIN SETUP
+    rpiserial = ESPSerial()
+    if rpiserial.port is None:
+        sys.stderr.write('1')
+        sys.stderr.flush()
+        stop = True
+    stop = False
+    while not stop:
+        action, params = manage_input()
+        match action:
+            case Actions.RECORD:
+                n_clicks, freq_index, ear, clcik_dbamp, click_duration, cycle_duration = params
+                frequency = STANDARD_FREQUENCIES_DICT[freq_index]
+                clicker = Clicker(freq=frequency, 
+                                  ear=ear,
+                                  dbamp=clcik_dbamp,
+                                  click_duration=click_duration, 
+                                  cycle_duration=cycle_duration, 
+                                  nclicks=n_clicks)
+                rpiserial.set_clicker(clicker)
+                rpiserial.set_serial(n_clicks, cycle_duration)
+                if not rpiserial.record_data():
+                    sys.stderr.write('2')
+                    sys.stderr.flush()
+                    continue
+                rpiserial.close()
+                rpiserial.get_data_average()
+                f_name = f'{frequency}Hz_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+                rpiserial.save_averaged_data(os.path.join(OUTPUT_DIR, f_name))
+            case Actions.RESET:
+                rpiserial._reset_esp()
+            case Actions.EXIT:
+                stop = True
+    rpiserial.close_gpio_pins()
 
 if __name__ == '__main__':
     main()

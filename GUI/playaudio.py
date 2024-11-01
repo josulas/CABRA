@@ -103,6 +103,6 @@ hh
 
 
 if __name__ == "__main__":
-    clicker = Clicker(freq=8000, nclicks=100, ear=EarSelect.LEFT, dbamp=40)
+    clicker = Clicker(freq=8000, nclicks=100, ear=EarSelect.LEFT, dbamp=0)
     clicker.playToneBurst()
     
