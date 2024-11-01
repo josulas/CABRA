@@ -260,13 +260,13 @@ def manage_input():
     except ValueError:
         sys.stderr.write('3')
         sys.stderr.flush()
-        return False, None
+        return None, None
     except KeyboardInterrupt:
-        return True, None
+        return Actions.EXIT, None
     except IndexError:
         sys.stderr.write('3')
         sys.stderr.flush()
-        return False, None
+        return None, None
 
 
 def main():
