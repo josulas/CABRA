@@ -44,13 +44,12 @@ class Actions:
 
 class ESPSerial:
     def __init__(self,
-                 clicker: Clicker = None,
+                 clicker: Clicker | None = None,
                  port: str | None = None,
                  baudrate: int = BAUDRATE,
                  sampling_rate: int = SAMPLINGRATE,
                  buffersize: int = SAMPLINGRATE,
                  bytessample: int = BYTESPERSAMPLE,
-                 audio_frequencies: dict[int, int] = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000},
                  alpha_s: int = 45,
                  delta_f: int = 10,
                  f_pass: int = 150,
@@ -86,7 +85,6 @@ class ESPSerial:
         self.serial = None
 
         # Filter design
-        self.frequencies = audio_frequencies
         self.alpha_s = alpha_s
         self.delta_f = delta_f
         self.f_pass = f_pass
@@ -152,7 +150,8 @@ class ESPSerial:
             self.nusefulsamples = int(nclicks * cycle_duration / 1000.0 * SAMPLINGRATE)
             self.clicknumberofsamples = int(cycle_duration / 1000.0 * SAMPLINGRATE)
             self.waitingtime = cycle_duration / 1000.0 * nclicks + 5
-            self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
+            self.serial = Serial(self.port, self.baudrate, timeout=None)
+            # self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
 
     def record_data(self) -> bool:
         """
@@ -169,6 +168,7 @@ class ESPSerial:
         self.clicker.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
         binary_data = self.serial.read(self.nbytes)
+        print('yey')
         GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
         if len(binary_data) != self.nbytes:
             return False
@@ -192,7 +192,7 @@ class ESPSerial:
         """
         self.clicker = clicker
 
-    def get_data_average(self, mode: str='homogenous'):
+    def get_data_average(self, mode: str='both'):
         """
         Get the average of the recorded data
         :param mode: mode for the average
