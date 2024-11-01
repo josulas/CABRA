@@ -165,12 +165,9 @@ class ESPSerial:
 
         self.serial.write(f"{self.nusefulsamples}".encode())
         time.sleep(1)
-        if self.serial.out_waiting == 0:
-            print("Data has been read by ESP32")
-        else:
-            print("Data still in buffer, ESP32 might not be reading it.")
         self.clicker.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
+        print(self.nbytes, self.nusefulsamples, self.nsamples)
         binary_data = self.serial.read(self.nbytes)
         print('yey')
         GPIO.output(INTERRUPTION_PIN, GPIO.LOW)

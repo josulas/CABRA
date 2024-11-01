@@ -17,6 +17,7 @@ volatile bool sampling_done = false;
 volatile bool bufferA = true;
 volatile uint16_t adcBufferA[BUFFERSIZE];
 volatile uint16_t adcBufferB[BUFFERSIZE];
+volatile uint buffersSent = 0;
 volatile uint adcRead = 0;
 volatile uint16_t adcBufferIdx = 0;
 volatile uint16_t readVal = 0;
@@ -27,11 +28,11 @@ void sendBuffer(){
   // Choose the right bufffer, which is not in use by the ADC
   if (!bufferA){
     // Send the buffer to the Raspberry Pi
-    Serial2.write((uint8_t *) adcBufferA, BUFFERSIZE * 2);
+    Serial.write((uint8_t *) adcBufferA, BUFFERSIZE * 2);
   }
   else{
     // Send the buffer to the Raspberry Pi
-    Serial2.write((uint8_t *) adcBufferB, BUFFERSIZE * 2);
+    Serial.write((uint8_t *) adcBufferB, BUFFERSIZE * 2);
   }
 }
 
@@ -75,21 +76,22 @@ void sendDataTask(void *pvParameters){
   for (;;){
     vTaskSuspend(NULL);
     sendBuffer();
+    buffersSent++;
   }
 }
 
 
 void setup(){
   // Pin configuration
-  pinMode(INTERRUPT_PIN, INPUT_PULLUP);    // Interrupt pin
-  pinMode(READPIN, INPUT);               // ADC pin
+  pinMode(INTERRUPT_PIN, INPUT_PULLUP);     // Interrupt pin
+  pinMode(READPIN, INPUT);                  // ADC pin
 
   // Serial for control and logging
   Serial.begin(SERIALBAUD);
   if (!Serial) {
     return;
   }
-  
+
   // Timer configuration
   samplerTimer = timerBegin(0, 80, true);    // 80 MHz / 800 = 1 MHz
   timerAttachInterrupt(samplerTimer, &samplerTimerISER, true);
@@ -107,17 +109,19 @@ void setup(){
     0,      /* Priority of the task */
     &sendTask,   /* Task handle. */
     0);     /* Core where the task should run */
+  
 }
 
 
 void loop(){
-  while(!Serial.available()) {}
+  while(!Serial.available()){}
   n_samples = Serial.parseInt();
-  // Wait for the serial to stop reading data
   Serial.flush();
+  // Wait for the serial to stop reading data
   attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), startSampling, RISING);
   // For logging purposes
   adcRead = 0;
+  buffersSent = 0;
   // Reset everything needed for the burst
   sampling_done = false;
   adcBufferIdx = 0;
@@ -128,6 +132,7 @@ void loop(){
   if (adcBufferIdx > 0){
     bufferA = !bufferA;
     sendBuffer();
+    buffersSent++;
   }
   // Disable interruption
   detachInterrupt(INTERRUPT_PIN);
