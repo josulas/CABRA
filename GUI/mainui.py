@@ -2,15 +2,15 @@ import sys
 from PyQt5.QtWidgets import QApplication
 import pyqtgraph as pg
 import numpy as np
+from template import Ui_MainWindow
 
-uiclass, baseclass = pg.Qt.loadUiType("template.ui")
 
-class MainWindow(uiclass, baseclass):
+class MainWindow(Ui_MainWindow):
     def __init__(self, data):
         super().__init__()
         self.setupUi(self)
-        self.widget.plot(data, pen='red')
-        self.widget.showGrid(x=True, y=True, alpha=0.3)
+        self.plotWidget.plot(data, pen='red')
+        self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
 
 def run_ui(data):
     app = QApplication(sys.argv)
