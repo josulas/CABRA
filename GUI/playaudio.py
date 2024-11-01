@@ -1,11 +1,12 @@
 import simpleaudio as sa
 import numpy as np
-from mainui import MainWindow, run_ui
+
 
 NCLICKS = 2000  
 CYCLE_DURATION = 30 # ms (including pause)
 CLICK_DURATION = 10 # ms
-SAMPLINGRATE = 96_000 # Hz
+AUDIO_RATE = 48_000 # Hz
+
 
 class EarSelect(object):
     RIGHT = 2
@@ -27,7 +28,7 @@ class Clicker(object):
                  freq: int=1000,
                  cycle_duration: int=CYCLE_DURATION,
                  click_duration: int=CLICK_DURATION,
-                 samplingrate: int=SAMPLINGRATE,
+                 samplingrate: int=AUDIO_RATE,
                  nclicks: int = NCLICKS,
                  dbamp: int = 0,
                  ear: int = EarSelect.BOTH,
@@ -100,9 +101,8 @@ hh
         play_obj = sa.play_buffer(buffer, 2, 2, self.samplingrate)
         play_obj.wait_done() if wait else None
 
+
 if __name__ == "__main__":
-    clicker = Clicker(freq=4000, nclicks=100, ear=EarSelect.LEFT)
-    t = np.linspace(0, CYCLE_DURATION/1000, int(CYCLE_DURATION/1000 * SAMPLINGRATE), False)
-    data = clicker.tone_burst
+    clicker = Clicker(freq=8000, nclicks=100, ear=EarSelect.LEFT, dbamp=40)
     clicker.playToneBurst()
-    # run_ui(data)
+    
