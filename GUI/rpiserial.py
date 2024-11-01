@@ -125,8 +125,6 @@ class ESPSerial:
         """
         ports = serial.tools.list_ports.comports()
         for port, desc, _ in sorted(ports):
-            print(desc)
-        for port, desc, _ in sorted(ports):
             if SERIAL_RECOGNIZER in desc:
                 return port
         raise serial.serialutil.SerialException('ESP not found')
@@ -166,7 +164,11 @@ class ESPSerial:
             raise RuntimeError("Clicker object was not set")
 
         self.serial.write(f"{self.nusefulsamples}".encode())
-        time.sleep(0.5)
+        time.sleep(1)
+        if self.serial.out_waiting == 0:
+            print("Data has been read by ESP32")
+        else:
+            print("Data still in buffer, ESP32 might not be reading it.")
         self.clicker.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
         binary_data = self.serial.read(self.nbytes)
