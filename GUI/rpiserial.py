@@ -235,7 +235,7 @@ def manage_input():
         action = int(control[0])
         if action not in list(Actions()):
             raise ValueError(F"Action should be one of {list(Actions())}, got {action} instead.")
-        if action:
+        if action == Actions.RECORD:
             nclicks = int(control[1])
             if nclicks < 1:
                 raise ValueError(F"Number of clicks should be greater than 1, got {nclicks} instead.")
