@@ -27,6 +27,7 @@ THRESHOLDV = 40e-6
 GAIN = 30000 / 4 # SIGNALRANGE / EEGRANGE
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 INTERRUPTION_PIN = 11
+OUTPUT_DIR = 'saved_data'
 
 # PIN SETUP
 GPIO.setmode(GPIO.BOARD)
@@ -69,7 +70,9 @@ class RPISerial:
         time.sleep(2)  # Allow time for connection to establish
 
         # Calculated parameters
-        self.nbytes = int(np.ceil(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE * BYTESPERSAMPLE
+        self.nsamples = int(np.ceil(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE 
+        self.nbytes = self.nsamples * BYTESPERSAMPLE
+        print(self.nbytes)
         self.nusefulsamples = int(NCLICKS * CYCLEDURATION / 1000.0 * SAMPLINGRATE)
         self.clicknumberofsamples = int(CYCLEDURATION / 1000.0 * SAMPLINGRATE)
         self.xvals = np.arange(0, self.clicknumberofsamples, 1) * CYCLEDURATION / self.clicknumberofsamples # ms
@@ -119,6 +122,8 @@ class RPISerial:
         """
         assert self.clicker is not None, "Clicker not set"
 
+        self.serial.write(f"{self.nusefulsamples}".encode())
+        time.sleep(1)
         self.clicker.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
         binary_data = self.serial.read(self.nbytes)
@@ -167,7 +172,7 @@ class RPISerial:
         Save the averaged data to a file
         :param filename: name of the file
         """
-        np.save(filename, self.averaged_data)
+        np.save(f"{OUTPUT_DIR}/{filename}", self.averaged_data)
 
 
 def main():
@@ -191,9 +196,9 @@ def main():
             evoked_potential = rpiserial.get_data_average()
 
             # Save data
-            f_name = f'{frequency}_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
-            np.save(f_name, evoked_potential)
-            print("Data saved to evoked_test.npy")
+            f_name = f'{frequency}Hz_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+            rpiserial.save_averaged_data(f_name)
+            print(f"Data saved to {f_name}.npy")
 
     except KeyboardInterrupt:
         print("\nExiting the program.\n")
