@@ -187,7 +187,7 @@ def main():
                 option = input(f"Choose a frequency index (digit between 0 and {len(rpiserial.frequencies)}): ")
 
             frequency = rpiserial.frequencies[int(option)]
-            clicker = Clicker(freq=frequency, click_duration=CLICKDURATION, cycle_duration=CYCLEDURATION, nclicks=NCLICKS)
+            clicker = Clicker(freq=frequency, dbamp=0, click_duration=CLICKDURATION, cycle_duration=CYCLEDURATION, nclicks=NCLICKS)
             rpiserial.set_clicker(clicker)
 
             # Extract data and take average
