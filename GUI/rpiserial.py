@@ -13,8 +13,6 @@ import os
 # Board parameters
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
 BAUDRATE = 960000  # (DO NOT CHANGE)
-CYCLEDURATION = 30 # ms (including pause)
-CLICKDURATION = 10 # ms
 SAMPLINGRATE = 10000 # Hz (DO NOT CHANGE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
 BUFFERSIZE = 128 # (DO NOT CHANGE)
@@ -31,6 +29,7 @@ THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 INTERRUPTION_PIN = 11
 RESET_ESP_PIN = 12
 OUTPUT_DIR = 'saved_data'
+SERIAL_RECOGNIZER = "USB to UART Bridge Controller"
 
 
 class Actions:
@@ -128,10 +127,7 @@ class ESPSerial:
         """
         ports = serial.tools.list_ports.comports()
         for port, desc, _ in sorted(ports):
-            print(desc)
-        sys.exit(0)
-        for port, desc, _ in sorted(ports):
-            if 'tty' in desc:
+            if SERIAL_RECOGNIZER in desc:
                 return port
         raise serial.serialutil.SerialException('ESP not found')
 
@@ -158,7 +154,7 @@ class ESPSerial:
             self.waitingtime = cycle_duration / 1000.0 * nclicks + 5
             self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
 
-    def record_data(self) -> np.ndarray:
+    def record_data(self) -> bool:
         """
         Record data from the ESP32
         :return: numpy array with the recorded data
@@ -196,7 +192,7 @@ class ESPSerial:
         """
         self.clicker = clicker
 
-    def get_data_average(self, mode: str='homogenous') -> np.ndarray:
+    def get_data_average(self, mode: str='homogenous'):
         """
         Get the average of the recorded data
         :param mode: mode for the average
@@ -206,7 +202,6 @@ class ESPSerial:
             raise RuntimeError("No data recorded")
         averaged_data = average_EEG(self.data, mode=mode)
         self.averaged_data = averaged_data
-        return averaged_data
 
     def save_raw_data(self, filename: str):
         """
@@ -265,11 +260,13 @@ def manage_input():
     except ValueError:
         sys.stderr.write('3')
         sys.stderr.flush()
+        return False, None
     except KeyboardInterrupt:
         return True, None
     except IndexError:
         sys.stderr.write('3')
         sys.stderr.flush()
+        return False, None
 
 
 def main():
@@ -284,11 +281,11 @@ def main():
         action, params = manage_input()
         match action:
             case Actions.RECORD:
-                n_clicks, freq_index, ear, clcik_dbamp, click_duration, cycle_duration = params
+                n_clicks, freq_index, ear, click_dbamp, click_duration, cycle_duration = params
                 frequency = STANDARD_FREQUENCIES_DICT[freq_index]
                 clicker = Clicker(freq=frequency, 
                                   ear=ear,
-                                  dbamp=clcik_dbamp,
+                                  dbamp=click_dbamp,
                                   click_duration=click_duration, 
                                   cycle_duration=cycle_duration, 
                                   nclicks=n_clicks)
@@ -302,8 +299,10 @@ def main():
                 rpiserial.get_data_average()
                 f_name = f'{frequency}Hz_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
                 rpiserial.save_averaged_data(os.path.join(OUTPUT_DIR, f_name))
+                sys.stdout.write(f_name)
+                sys.stdout.flush()
             case Actions.RESET:
-                rpiserial._reset_esp()
+                rpiserial.reset_esp()
             case Actions.EXIT:
                 stop = True
     rpiserial.close_gpio_pins()

@@ -5,8 +5,6 @@
 #define SAMPLERATE 10000 // Hz
 #define BUFFERSIZE 128 // 128 samples of 2 bytes each, 256 bytes in total
 #define INTERRUPT_PIN 2
-#define RXD2 16
-#define TXD2 17
 #define SERIALBAUD 960000
 #define READPIN 4
 
