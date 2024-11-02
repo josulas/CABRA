@@ -66,7 +66,7 @@ void IRAM_ATTR samplerTimerISER(){
 
 
 void IRAM_ATTR startSampling(){
-    gpio_isr_handler_remove(GPIO_NUM_2);
+    detachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN));
     timerRestart(samplerTimer);
     timerAlarmEnable(samplerTimer);
 }
@@ -116,13 +116,12 @@ void loop(){
   n_samples = Serial.parseInt();
   // Wait for the serial to stop reading data
   Serial.flush();
-  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), startSampling, RISING);
-  // For logging purposes
-  adcRead = 0;
   // Reset everything needed for the burst
+  adcRead = 0;
   sampling_done = false;
   adcBufferIdx = 0;
   bufferA = true;
+  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), startSampling, RISING);
   // Wait for the sampling and sending to finish
   while (!sampling_done) {}
   // Send the last buffer, if it is not empty
@@ -130,4 +129,6 @@ void loop(){
     bufferA = !bufferA;
     sendBuffer();
   }
+  n_samples = 0;
+  ESP.restart();
 }

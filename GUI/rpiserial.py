@@ -163,13 +163,15 @@ class ESPSerial:
         if self.clicker is None:
             raise RuntimeError("Clicker object was not set")
 
+        self.serial.read(self.serial.inWaiting())
         self.serial.write(f"{self.nusefulsamples}".encode())
         time.sleep(1)
         self.clicker.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
         print(self.nbytes, self.nusefulsamples, self.nsamples)
         binary_data = self.serial.read(self.nbytes)
-        print('yey')
+        time.sleep(1)
+        print(self.serial.inWaiting())
         GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
         if len(binary_data) != self.nbytes:
             return False
