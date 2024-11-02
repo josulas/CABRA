@@ -171,7 +171,8 @@ class ESPSerial:
         try:
             binary_data = self.serial.read(self.nbytes)
         except serial.serialutil.SerialException:
-            raise RuntimeError("Serial connection lost")
+            GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
+            raise ConnectionError("Serial connection lost")
         GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
         if len(binary_data) != self.nbytes:
             raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nbytes} bytes, got {len(binary_data)} bytes.")
@@ -273,12 +274,12 @@ def manage_input():
 
 def main():
     # PIN SETUP
+    stop = False
     rpiserial = ESPSerial()
     if rpiserial.port is None:
         sys.stderr.write('1')
         sys.stderr.flush()
         stop = True
-    stop = False
     while not stop:
         action, params = manage_input()
         match action:
@@ -299,6 +300,11 @@ def main():
                     sys.stderr.write('2')
                     sys.stderr.flush()
                     continue
+                except ConnectionError:
+                    sys.stderr.write('1')
+                    sys.stderr.flush()
+                    stop = True
+                    break
                 except KeyboardInterrupt:
                     stop = True
                     break
