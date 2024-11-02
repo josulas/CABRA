@@ -2,7 +2,7 @@
 // #include "freertos/semphr.h"
 
 // defines
-#define SAMPLERATE 5000 // Hz
+#define SAMPLERATE 8000 // Hz
 #define BUFFERSIZE 128 // 128 samples of 2 bytes each, 256 bytes in total
 #define INTERRUPT_PIN 2
 #define SERIALBAUD 960000
