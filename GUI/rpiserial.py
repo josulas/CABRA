@@ -165,10 +165,10 @@ class ESPSerial:
 
         self.serial.read(self.serial.inWaiting())
         self.serial.write(f"{self.nusefulsamples}".encode())
+        time.sleep(3)
         self.clicker.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
         binary_data = self.serial.read(self.nbytes)
-        print(self.serial.inWaiting())
         GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
         if len(binary_data) != self.nbytes:
             raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nbytes} bytes, got {len(binary_data)} bytes.")
