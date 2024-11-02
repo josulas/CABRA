@@ -311,8 +311,9 @@ def main():
                 rpiserial.close()
                 rpiserial.get_data_average()
                 f_name = f'{frequency}Hz_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
-                rpiserial.save_averaged_data(os.path.join(OUTPUT_DIR, f_name))
-                sys.stdout.write(f_name)
+                f_path = os.path.join(OUTPUT_DIR, f_name)
+                rpiserial.save_averaged_data(f_path)
+                sys.stdout.write(f_path)
                 sys.stdout.flush()
             case Actions.RESET:
                 rpiserial.reset_esp()
