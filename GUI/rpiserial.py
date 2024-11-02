@@ -53,7 +53,7 @@ class ESPSerial:
                  alpha_s: int = 45,
                  delta_f: int = 10,
                  f_pass: int = 150,
-                 f_stop: int = 3000,
+                 f_stop: int = 300,
                  amplitude_threshold: float = THRESHOLD):
         """
         Initializes the serial connection with the ESP32
