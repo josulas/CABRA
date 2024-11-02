@@ -27,11 +27,11 @@ void sendBuffer(){
   // Choose the right bufffer, which is not in use by the ADC
   if (!bufferA){
     // Send the buffer to the Raspberry Pi
-    Serial2.write((uint8_t *) adcBufferA, BUFFERSIZE * 2);
+    Serial.write((uint8_t *) adcBufferA, BUFFERSIZE * 2);
   }
   else{
     // Send the buffer to the Raspberry Pi
-    Serial2.write((uint8_t *) adcBufferB, BUFFERSIZE * 2);
+    Serial.write((uint8_t *) adcBufferB, BUFFERSIZE * 2);
   }
 }
 
@@ -66,6 +66,7 @@ void IRAM_ATTR samplerTimerISER(){
 
 
 void IRAM_ATTR startSampling(){
+    gpio_isr_handler_remove(GPIO_NUM_2);
     timerRestart(samplerTimer);
     timerAlarmEnable(samplerTimer);
 }
@@ -129,6 +130,4 @@ void loop(){
     bufferA = !bufferA;
     sendBuffer();
   }
-  // Disable interruption
-  detachInterrupt(INTERRUPT_PIN);
 }
