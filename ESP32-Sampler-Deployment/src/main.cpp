@@ -2,10 +2,10 @@
 // #include "freertos/semphr.h"
 
 // defines
-#define SAMPLERATE 8000 // Hz
+#define SAMPLERATE 10000 // Hz
 #define NSAMPLESPERBUFFER 512
 #define INTERRUPT_PIN 2
-#define SERIALBAUD 960000
+#define SERIALBAUD 2000000
 #define READPIN 4
 
 // Task related variables
