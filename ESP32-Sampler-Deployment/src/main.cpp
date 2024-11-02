@@ -3,7 +3,7 @@
 
 // defines
 #define SAMPLERATE 8000 // Hz
-#define BUFFERSIZE 128 // 128 samples of 2 bytes each, 256 bytes in total
+#define NSAMPLESPERBUFFER 512 // 128 samples of 2 bytes each, 256 bytes in total
 #define INTERRUPT_PIN 2
 #define SERIALBAUD 960000
 #define READPIN 4
@@ -15,8 +15,8 @@ volatile bool sampling_done = false;
 
 // ADC related variables
 volatile bool bufferA = true;
-volatile uint16_t adcBufferA[BUFFERSIZE];
-volatile uint16_t adcBufferB[BUFFERSIZE];
+volatile uint16_t adcBufferA[NSAMPLESPERBUFFER];
+volatile uint16_t adcBufferB[NSAMPLESPERBUFFER];
 volatile uint adcRead = 0;
 volatile uint16_t adcBufferIdx = 0;
 volatile uint16_t readVal = 0;
@@ -27,11 +27,11 @@ void sendBuffer(){
   // Choose the right bufffer, which is not in use by the ADC
   if (!bufferA){
     // Send the buffer to the Raspberry Pi
-    Serial.write((uint8_t *) adcBufferA, BUFFERSIZE * 2);
+    Serial.write((uint8_t *) adcBufferA, NSAMPLESPERBUFFER * 2);
   }
   else{
     // Send the buffer to the Raspberry Pi
-    Serial.write((uint8_t *) adcBufferB, BUFFERSIZE * 2);
+    Serial.write((uint8_t *) adcBufferB, NSAMPLESPERBUFFER * 2);
   }
 }
 
@@ -45,7 +45,7 @@ void readADC(){
   else{
     adcBufferB[adcBufferIdx++] = readVal;
   }
-  if (adcBufferIdx == BUFFERSIZE){
+  if (adcBufferIdx == NSAMPLESPERBUFFER){
     bufferA = !bufferA;
     adcBufferIdx = 0;
     vTaskResume(sendTask);
@@ -85,7 +85,9 @@ void setup(){
   pinMode(INTERRUPT_PIN, INPUT_PULLUP);    // Interrupt pin
   pinMode(READPIN, INPUT);               // ADC pin
 
-  // Serial for control and logging
+  // Serial initialization
+  Serial.setRxBufferSize(NSAMPLESPERBUFFER * 2);
+  Serial.setTxBufferSize(NSAMPLESPERBUFFER * 2);
   Serial.begin(SERIALBAUD);
   if (!Serial) {
     return;

@@ -15,7 +15,7 @@ STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
 BAUDRATE = 960000  # (DO NOT CHANGE)
 SAMPLINGRATE = 8000 # Hz (DO NOT CHANGE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
-BUFFERSIZE = 128 # (DO NOT CHANGE)
+NSAMPLESPERBUFFER = 512 # (DO NOT CHANGE)
 EEGRANGE = 5e-6 # Vpp
 SIGNALRANGE = 1 # Vpp
 ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
@@ -145,7 +145,9 @@ class ESPSerial:
     def set_serial(self, nclicks: int, cycle_duration: int):
         if self.port is not None:
             self.nclicks = nclicks
-            self.nsamples = int(np.ceil(nclicks * cycle_duration/ 1000.0 * SAMPLINGRATE / BUFFERSIZE)) * BUFFERSIZE 
+            self.nsamples = int(np.ceil(nclicks * cycle_duration/ 1000.0 * SAMPLINGRATE / NSAMPLESPERBUFFER
+        )) * NSAMPLESPERBUFFER
+         
             self.nbytes = self.nsamples * BYTESPERSAMPLE
             self.nusefulsamples = int(nclicks * cycle_duration / 1000.0 * SAMPLINGRATE)
             self.clicknumberofsamples = int(cycle_duration / 1000.0 * SAMPLINGRATE)
