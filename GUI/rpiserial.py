@@ -153,7 +153,7 @@ class ESPSerial:
             self.serial = Serial(self.port, self.baudrate, timeout=None)
             # self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
 
-    def record_data(self) -> bool:
+    def record_data(self):
         """
         Record data from the ESP32
         :return: numpy array with the recorded data
@@ -165,22 +165,18 @@ class ESPSerial:
 
         self.serial.read(self.serial.inWaiting())
         self.serial.write(f"{self.nusefulsamples}".encode())
-        time.sleep(1)
         self.clicker.playToneBurst(False)
         GPIO.output(INTERRUPTION_PIN, GPIO.HIGH)
-        print(self.nbytes, self.nusefulsamples, self.nsamples)
         binary_data = self.serial.read(self.nbytes)
-        time.sleep(1)
         print(self.serial.inWaiting())
         GPIO.output(INTERRUPTION_PIN, GPIO.LOW)
         if len(binary_data) != self.nbytes:
-            return False
+            raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nbytes} bytes, got {len(binary_data)} bytes.")
         data = np.frombuffer(binary_data, dtype=np.uint16)[:self.nusefulsamples]
         data = data.reshape((self.nclicks, self.clicknumberofsamples)).astype(np.float64)
         data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
         useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
         self.data = useful_data
-        return True
 
     def close(self):
         """
@@ -284,17 +280,19 @@ def main():
         action, params = manage_input()
         match action:
             case Actions.RECORD:
-                n_clicks, freq_index, ear, click_dbamp, click_duration, cycle_duration = params
+                nclicks, freq_index, ear, click_dbamp, click_duration, cycle_duration = params
                 frequency = STANDARD_FREQUENCIES_DICT[freq_index]
-                clicker = Clicker(freq=frequency, 
+                clicker = Clicker(freq=frequency,
                                   ear=ear,
                                   dbamp=click_dbamp,
-                                  click_duration=click_duration, 
-                                  cycle_duration=cycle_duration, 
-                                  nclicks=n_clicks)
+                                  click_duration=click_duration,
+                                  cycle_duration=cycle_duration,
+                                  nclicks=nclicks)
                 rpiserial.set_clicker(clicker)
-                rpiserial.set_serial(n_clicks, cycle_duration)
-                if not rpiserial.record_data():
+                rpiserial.set_serial(nclicks, cycle_duration)
+                try:
+                    rpiserial.record_data()
+                except Exception as e:
                     sys.stderr.write('2')
                     sys.stderr.flush()
                     continue
