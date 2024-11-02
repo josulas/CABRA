@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>822</width>
-    <height>574</height>
+    <width>1136</width>
+    <height>652</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,8 +30,7 @@
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(55, 50, 50);
-alternate-background-color: rgb(154, 153, 150);</string>
+       <string notr="true">background-color: rgb(222, 207, 189);</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
@@ -56,6 +55,9 @@ alternate-background-color: rgb(154, 153, 150);</string>
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">border-color: rgb(6, 6, 6);</string>
            </property>
           </widget>
          </item>
@@ -112,7 +114,7 @@ alternate-background-color: rgb(154, 153, 150);</string>
          <item row="0" column="0">
           <widget class="QLabel" name="labelFreq">
            <property name="text">
-            <string>Frequency:</string>
+            <string>Frequency [Hz]:</string>
            </property>
           </widget>
          </item>
@@ -124,12 +126,42 @@ alternate-background-color: rgb(154, 153, 150);</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <item>
+            <property name="text">
+             <string>250</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>500</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1000</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2000</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>4000</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>8000</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="labrlAmp">
            <property name="text">
-            <string>Amplitude:</string>
+            <string>Amplitude [dB]:</string>
            </property>
           </widget>
          </item>
@@ -141,6 +173,31 @@ alternate-background-color: rgb(154, 153, 150);</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>10</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>20</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>30</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>40</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>
@@ -161,6 +218,7 @@ alternate-background-color: rgb(154, 153, 150);</string>
          </property>
          <property name="font">
           <font>
+           <weight>75</weight>
            <italic>false</italic>
            <bold>true</bold>
            <kerning>true</kerning>
@@ -194,8 +252,8 @@ alternate-background-color: rgb(154, 153, 150);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>822</width>
-     <height>23</height>
+     <width>1136</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
