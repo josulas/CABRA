@@ -149,9 +149,9 @@ class ESPSerial:
             self.nbytes = self.nsamples * BYTESPERSAMPLE
             self.nusefulsamples = int(nclicks * cycle_duration / 1000.0 * SAMPLINGRATE)
             self.clicknumberofsamples = int(cycle_duration / 1000.0 * SAMPLINGRATE)
-            self.waitingtime = cycle_duration / 1000.0 * nclicks + 5
-            self.serial = Serial(self.port, self.baudrate, timeout=None)
-            # self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
+            self.waitingtime = cycle_duration / 1000.0 * nclicks + 1
+            # self.serial = Serial(self.port, self.baudrate, timeout=None)
+            self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
 
     def record_data(self):
         """
@@ -292,10 +292,13 @@ def main():
                 rpiserial.set_serial(nclicks, cycle_duration)
                 try:
                     rpiserial.record_data()
-                except Exception as e:
+                except RuntimeError:
                     sys.stderr.write('2')
                     sys.stderr.flush()
                     continue
+                except KeyboardInterrupt:
+                    stop = True
+                    break
                 rpiserial.close()
                 rpiserial.get_data_average()
                 f_name = f'{frequency}Hz_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
