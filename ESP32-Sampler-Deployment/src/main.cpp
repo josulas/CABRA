@@ -3,7 +3,7 @@
 
 // defines
 #define SAMPLERATE 10000 // Hz
-#define NSAMPLESPERBUFFER 512 // 128 samples of 2 bytes each, 256 bytes in total
+#define NSAMPLESPERBUFFER 256
 #define INTERRUPT_PIN 2
 #define SERIALBAUD 960000
 #define READPIN 4
