@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'template.ui'
+# Form implementation generated from reading ui file '.\template.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -26,7 +26,10 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.frameControl.sizePolicy().hasHeightForWidth())
         self.frameControl.setSizePolicy(sizePolicy)
         self.frameControl.setMinimumSize(QtCore.QSize(0, 100))
-        self.frameControl.setStyleSheet("background-color: rgb(222, 207, 189);")
+        self.frameControl.setStyleSheet("background-color: rgb(71, 63, 53);\n"
+"background-color: rgb(21, 27, 35);\n"
+"font: 9pt \"Arialt\";\n"
+"color: rgb(255, 255, 255);")
         self.frameControl.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frameControl.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frameControl.setObjectName("frameControl")
@@ -117,9 +120,11 @@ class Ui_MainWindow(object):
         self.pushRUN.setSizePolicy(sizePolicy)
         self.pushRUN.setMinimumSize(QtCore.QSize(100, 0))
         font = QtGui.QFont()
-        font.setBold(True)
+        font.setFamily("Arialt")
+        font.setPointSize(9)
+        font.setBold(False)
         font.setItalic(False)
-        font.setWeight(75)
+        font.setWeight(50)
         font.setKerning(True)
         self.pushRUN.setFont(font)
         icon = QtGui.QIcon.fromTheme("media-playback-start")
@@ -131,6 +136,14 @@ class Ui_MainWindow(object):
         self.plotWidget = PlotWidget(self.centralwidget)
         self.plotWidget.setObjectName("plotWidget")
         self.verticalLayout.addWidget(self.plotWidget)
+        self.labelStatus = QtWidgets.QLabel(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.labelStatus.sizePolicy().hasHeightForWidth())
+        self.labelStatus.setSizePolicy(sizePolicy)
+        self.labelStatus.setObjectName("labelStatus")
+        self.verticalLayout.addWidget(self.labelStatus)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1136, 26))
@@ -171,6 +184,7 @@ class Ui_MainWindow(object):
         self.comboBoxAmp.setItemText(3, _translate("MainWindow", "30"))
         self.comboBoxAmp.setItemText(4, _translate("MainWindow", "40"))
         self.pushRUN.setText(_translate("MainWindow", "RUN"))
+        self.labelStatus.setText(_translate("MainWindow", "Set the parameters for the experiment, and hit RUN"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
 from pyqtgraph import PlotWidget

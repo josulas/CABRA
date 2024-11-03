@@ -1,18 +1,20 @@
 import sys
+import time
 import numpy as np
 from playaudio import EarSelect
 
 
 # Board parameters
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
-EVOKED_PATH = "e"
-NOISE_PATH = "n"
+EVOKED_PATH = "evoked.npy"
+NOISE_PATH = "noise.npy"
 
 
 class Actions:
     RECORD = 0
     RESET = 1
     EXIT = 2
+
     def __iter__(self):
         yield Actions.RECORD
         yield Actions.RESET
@@ -78,24 +80,26 @@ def manage_input():
 
 
 def main():
-    # PIN SETUP
-    fake_audo_limits = build_fake_patient_profile()
+    # SIM SETUP
+    # print("SIMULATION STARTED\n")
+    fake_audio_limits = build_fake_patient_profile()
     stop = False
     while not stop:
         action, params = manage_input()
         match action:
             case Actions.RECORD:
                 _, freq_index, ear, click_dbamp, _, _ = params
-                audio_limit = fake_audo_limits[freq_index][0 if ear == EarSelect.LEFT else 1]
-                if click_dbamp >= audio_limit:
-                    sys.stdout.write(EVOKED_PATH)
-                else:
-                    sys.stdout.write(NOISE_PATH)
+                audio_limit = fake_audio_limits[freq_index][0 if ear == EarSelect.LEFT else 1]
+                out_path = EVOKED_PATH if click_dbamp >= audio_limit else NOISE_PATH
+                # Simulate recording for 3 seconds, and write output
+                time.sleep(1)
+                sys.stdout.write(out_path)
                 sys.stdout.flush()
             case Actions.RESET:
                 pass
             case Actions.EXIT:
                 stop = True
+
 
 if __name__ == '__main__':
     main()

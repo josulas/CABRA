@@ -30,7 +30,10 @@
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color: rgb(222, 207, 189);</string>
+       <string notr="true">background-color: rgb(71, 63, 53);
+background-color: rgb(21, 27, 35);
+font: 9pt &quot;Arialt&quot;;
+color: rgb(255, 255, 255);</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
@@ -218,9 +221,11 @@
          </property>
          <property name="font">
           <font>
-           <weight>75</weight>
+           <family>Arialt</family>
+           <pointsize>9</pointsize>
+           <weight>50</weight>
            <italic>false</italic>
-           <bold>true</bold>
+           <bold>false</bold>
            <kerning>true</kerning>
           </font>
          </property>
@@ -244,6 +249,19 @@
     </item>
     <item>
      <widget class="PlotWidget" name="plotWidget" native="true"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelStatus">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Set the parameters for the experiment, and hit RUN</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
