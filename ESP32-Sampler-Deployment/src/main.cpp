@@ -1,5 +1,4 @@
 #include <arduino.h>
-// #include "freertos/semphr.h"
 
 // defines
 #define SAMPLERATE 8000 // Hz
