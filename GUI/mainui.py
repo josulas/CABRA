@@ -4,12 +4,12 @@ from PyQt5.QtCore import QProcess, pyqtSlot, pyqtSignal
 import pyqtgraph as pg
 import numpy as np
 from template import Ui_MainWindow
-from playaudio import Clicker, EarSelect, CLICK_DURATION, CYCLE_DURATION, NCLICKS
-from simserial import Actions
+from playaudio import Clicker, EarSelect
+from desktop_serial import Actions, SAMPLINGRATE
 
-
-SAMPLINGRATE = 10_000  # Hz (DO NOT CHANGE)
-
+CYCLE_DURATION = 30  # ms
+CLICK_DURATION = 10  # ms
+NCLICKS = 10
 
 class MainWindow(Ui_MainWindow, QMainWindow):
     recording_completed = pyqtSignal()
@@ -17,6 +17,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, process_path):
         super().__init__()
         self.setupUi(self)
+        self.radioRightEAR.setChecked(True)
 
         # Plot setup
         self.evoked_X_axis = np.linspace(0, CYCLE_DURATION, CYCLE_DURATION * SAMPLINGRATE // 1000)
@@ -58,12 +59,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     @pyqtSlot()
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
-        if '.npy' in data:
-            self.filepath = data.strip()
-            self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
-            self.recording_completed.emit()
-        else:
-            self.handle_stderr()
+        if data:
+            if '.npy' in data:
+                self.filepath = data.strip()
+                self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
+                self.recording_completed.emit()
 
     @pyqtSlot()
     def handle_stderr(self):
@@ -100,7 +100,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
 def run_ui():
     app = QApplication(sys.argv)
-    window = MainWindow(process_path='simserial.py')
+    window = MainWindow(process_path='desktop_serial.py')
     window.show()
     app.exec()
 

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def average_EEG(X: np.ndarray, mode: str='homogenous') -> np.ndarray:
+def average_EEG(X: np.ndarray, mode: str='homogenous', eps=1e-6) -> np.ndarray:
     """
     Performs a weighted or unweighted average of series of ERP EEG signals
 
@@ -21,16 +21,18 @@ def average_EEG(X: np.ndarray, mode: str='homogenous') -> np.ndarray:
     if mode not in VALID_MODES:
         raise ValueError(F"{mode} is not a valid mode. Should be: {''.join(VALID_MODES)}")
 
-    elif mode == 'homogenous':
+    if mode == 'homogenous':
         return np.mean(X, axis=0)
 
     # Find amplitudes
     s = np.mean(X, axis = 0)
     a = X.dot(s.T)
+    a[a==0] = eps
 
     # Find variances
     M = X.shape[1]
     V = np.var(X[:, -int(0.4*M):], axis=1)
+    V[V==0] = eps
 
     # Get weights and average
     if mode == 'amp':
@@ -41,3 +43,15 @@ def average_EEG(X: np.ndarray, mode: str='homogenous') -> np.ndarray:
         w = (a/V) / (np.sum(a**2/V))
 
     return w.T.dot(X/np.sum(w))
+
+if __name__ == "__main__":
+    X = np.random.rand(10, 100)
+    print(average_EEG(X, mode='homogenous'))
+    print(average_EEG(X, mode='amp'))
+    print(average_EEG(X, mode='var'))
+    print(average_EEG(X, mode='both'))
+    Zeroes = np.zeros((10, 100))
+    print(average_EEG(Zeroes, mode='homogenous'))
+    print(average_EEG(Zeroes, mode='amp'))
+    print(average_EEG(Zeroes, mode='var'))
+    print(average_EEG(Zeroes, mode='both'))

@@ -131,7 +131,11 @@ class ESPSerial:
             self.clicknumberofsamples = int(cycle_duration / 1000.0 * SAMPLINGRATE)
             self.waitingtime = cycle_duration / 1000.0 * nclicks + 1
             # self.serial = Serial(self.port, self.baudrate, timeout=None)
-            self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
+            try:
+                self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
+            except serial.serialutil.SerialException:
+                raise ConnectionError("Serial connection lost")
+
 
     def record_data(self):
         """
@@ -152,7 +156,6 @@ class ESPSerial:
             binary_data = self.serial.read(self.nbytes)
         except serial.serialutil.SerialException:
             raise ConnectionError("Serial connection lost")
-        
         if len(binary_data) != self.nbytes:
             raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nbytes} bytes, got {len(binary_data)} bytes.")
         data = np.frombuffer(binary_data, dtype=np.uint16)[:self.nusefulsamples]
@@ -272,8 +275,8 @@ def main():
                                   cycle_duration=cycle_duration,
                                   nclicks=nclicks)
                 laptop_serial.set_clicker(clicker)
-                laptop_serial.set_serial(nclicks, cycle_duration)
                 try:
+                    laptop_serial.set_serial(nclicks, cycle_duration)
                     laptop_serial.record_data()
                 except RuntimeError:
                     sys.stderr.write('2')
@@ -289,7 +292,7 @@ def main():
                     break
                 laptop_serial.close()
                 laptop_serial.get_data_average()
-                f_name = f'{frequency}Hz_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+                f_name = f'{frequency}Hz_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.npy'
                 f_path = os.path.join(OUTPUT_DIR, f_name)
                 if not os.path.exists(OUTPUT_DIR):
                     os.makedirs(OUTPUT_DIR)
