@@ -31,6 +31,8 @@
       </property>
       <property name="styleSheet">
        <string notr="true">background-color: rgb(55, 50, 50);
+gridline-color: rgb(0, 0, 0);
+border-color: rgb(0, 0, 0);
 font: 9pt &quot;Arialt&quot;;
 color: rgb(255, 255, 255);</string>
       </property>
@@ -95,12 +97,18 @@ color: rgb(255, 255, 255);</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="styleSheet">
+            <string notr="true">border-color: rgb(255, 0, 0);</string>
+           </property>
           </widget>
          </item>
         </layout>
        </item>
        <item>
         <layout class="QVBoxLayout" name="VLayoutEAR">
+         <property name="leftMargin">
+          <number>20</number>
+         </property>
          <item>
           <layout class="QHBoxLayout" name="HLayoutEar">
            <item>
@@ -202,7 +210,7 @@ color: rgb(255, 255, 255);</string>
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QSpinBox" name="spinBox_2">
+          <widget class="QSpinBox" name="spinCycleDuration">
            <property name="suffix">
             <string> [ms]</string>
            </property>
@@ -274,7 +282,7 @@ color: rgb(255, 255, 255);</string>
      <x>0</x>
      <y>0</y>
      <width>782</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
