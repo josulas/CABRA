@@ -1,5 +1,6 @@
 import simpleaudio as sa
 import numpy as np
+import wave
 
 
 NCLICKS = 2000  
@@ -89,6 +90,26 @@ hh
         """
         return np.tile(self.single_cycle, self.nclicks)
 
+    
+    def saveToneBurst(self, filename: str):
+        """
+        Saves the tone burst to a file
+
+        Args:
+            filename (str): the name of the file
+        """
+        buffer = np.zeros(2 * len(self.tone_burst), np.int16)
+        if not self.ear % EarSelect.LEFT:
+            buffer[::2] = self.tone_burst
+        if not self.ear % EarSelect.RIGHT:
+            buffer[1::2] = self.tone_burst
+        with wave.open(filename, 'w') as wav_file:
+            wav_file.setnchannels(2)
+            wav_file.setsampwidth(2)
+            wav_file.setframerate(self.samplingrate)
+            wav_file.writeframes(buffer.tobytes())
+
+    
     def playToneBurst(self, wait = True):
         """
         Plays the tone burst
@@ -103,6 +124,8 @@ hh
 
 
 if __name__ == "__main__":
-    clicker = Clicker(freq=8000, nclicks=100, ear=EarSelect.LEFT, dbamp=0)
-    clicker.playToneBurst()
-    
+    import os
+    clicker = Clicker(freq=1000, nclicks=100, ear=EarSelect.LEFT, dbamp=40)
+    clicker.saveToneBurst('~.wav')
+    input()
+    os.remove('~.wav')

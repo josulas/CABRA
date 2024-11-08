@@ -1,13 +1,15 @@
 import time
+from datetime import datetime
+import sys
+import os
+import subprocess
 from serial import Serial
 import serial.tools.list_ports
 import numpy as np
 import scipy.signal as signal
 from average_eeg import average_EEG
 from playaudio import Clicker, EarSelect
-from datetime import datetime
-import sys
-import os
+
 
 # Board parameters
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
@@ -22,13 +24,18 @@ QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.3  # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 40e-6
+THRESHOLDV = 40 # 40e-6
 GAIN = 30000 / 4 # SIGNALRANGE / EEGRANGE
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 INTERRUPTION_PIN = 11
 RESET_ESP_PIN = 12
 OUTPUT_DIR = 'saved_data'
 SERIAL_RECOGNIZER = "USB to UART Bridge"
+
+# Player parameters
+# Path to the C executable
+PLAYER_PATH_WINDOWS = "./audio_playback.exe"
+TEMP_FILE = "~.wav"
 
 
 class Actions:
@@ -95,6 +102,9 @@ class ESPSerial:
         self.data = None
         self.averaged_data = None
 
+        # Audio player
+        self.player = self._init_player()
+
     @staticmethod
     def _find_port() -> str:
         """
@@ -106,6 +116,14 @@ class ESPSerial:
             if SERIAL_RECOGNIZER in desc:
                 return port
         raise serial.serialutil.SerialException('ESP not found')
+    
+    def _init_player(self):
+        platform_name = sys.platform
+        if platform_name == 'win32':
+            return subprocess.Popen([PLAYER_PATH_WINDOWS], stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
+                           stderr=subprocess.PIPE, text=True)
+        else:
+            raise OSError("Unsupported platform")
 
     def _init_filter(self) -> np.ndarray:
         """
@@ -142,6 +160,15 @@ class ESPSerial:
         Record data from the ESP32
         :return: numpy array with the recorded data
         """
+        def send_command(process, command, expected_response):
+            process.stdin.write(command + "\n")
+            process.stdin.flush()
+            response = process.stdout.readline().strip()
+            if response == expected_response:
+                return True
+            else:
+                return False
+        
         if self.serial is None:
             raise RuntimeError("Serial connection not initialized")
         if self.clicker is None:
@@ -150,12 +177,17 @@ class ESPSerial:
         self.serial.read(self.serial.inWaiting())
         self.serial.write(f"{self.nusefulsamples}".encode())
         time.sleep(1)
-        self.clicker.playToneBurst(False) # Start audio playback
-        self.serial.write("S".encode()) # Start recording
+        self.clicker.saveToneBurst(TEMP_FILE)
+        send_command(self.player, TEMP_FILE, "U")
+        send_command(self.player, "L", "D")
+        send_command(self.player, "S", "F")
+        self.serial.write("S".encode())
         try:
             binary_data = self.serial.read(self.nbytes)
         except serial.serialutil.SerialException:
             raise ConnectionError("Serial connection lost")
+        finally:
+            os.remove(TEMP_FILE)
         if len(binary_data) != self.nbytes:
             raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nbytes} bytes, got {len(binary_data)} bytes.")
         data = np.frombuffer(binary_data, dtype=np.uint16)[:self.nusefulsamples]
@@ -183,7 +215,7 @@ class ESPSerial:
         :param mode: mode for the average
         :return: averaged data
         """
-        if self.data is None:
+        if self.data is None or len(self.data) == 0:
             raise RuntimeError("No data recorded")
         averaged_data = average_EEG(self.data, mode=mode)
         self.averaged_data = averaged_data

@@ -4,12 +4,12 @@ from PyQt5.QtCore import QProcess, pyqtSlot, pyqtSignal
 import pyqtgraph as pg
 import numpy as np
 from template import Ui_MainWindow
-from playaudio import Clicker, EarSelect
+from playaudio import EarSelect
 from desktop_serial import Actions, SAMPLINGRATE
 
 CYCLE_DURATION = 30  # ms
 CLICK_DURATION = 10  # ms
-NCLICKS = 10
+NCLICKS = 500
 
 class MainWindow(Ui_MainWindow, QMainWindow):
     recording_completed = pyqtSignal()
@@ -59,11 +59,13 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     @pyqtSlot()
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
+        print(data)
         if data:
             if '.npy' in data:
                 self.filepath = data.strip()
                 self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
                 self.recording_completed.emit()
+        self.pushRUN.setEnabled(True)
 
     @pyqtSlot()
     def handle_stderr(self):
@@ -77,6 +79,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     @pyqtSlot()
     def start_recording(self):
+        self.pushRUN.setEnabled(False)
         ear = 'left' if self.radioLeftEAR.isChecked() else 'right' if self.radioRightEAR.isChecked() else 'both'
         self.labelStatus.setText(f"Recording for {ear} ear{'s' if ear == 'both' else ''}, "
                                  f"frequency {self.comboBoxFreq.currentText()} Hz, "
