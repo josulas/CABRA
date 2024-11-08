@@ -1,15 +1,15 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtCore import QProcess, pyqtSlot, pyqtSignal
+from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtCore import QProcess, Slot as pyqtSlot, Signal as pyqtSignal
 import pyqtgraph as pg
 import numpy as np
-from template import Ui_MainWindow
-from playaudio import EarSelect
-from desktop_serial import Actions, SAMPLINGRATE
+from template_desktop import Ui_MainWindow
+from playaudio import Clicker, EarSelect, CLICK_DURATION, CYCLE_DURATION, NCLICKS
+from simserial import Actions
 
-CYCLE_DURATION = 30  # ms
-CLICK_DURATION = 10  # ms
-NCLICKS = 500
+
+SAMPLINGRATE = 10_000  # Hz (DO NOT CHANGE)
+
 
 class MainWindow(Ui_MainWindow, QMainWindow):
     recording_completed = pyqtSignal()
@@ -17,7 +17,6 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, process_path):
         super().__init__()
         self.setupUi(self)
-        self.radioRightEAR.setChecked(True)
 
         # Plot setup
         self.evoked_X_axis = np.linspace(0, CYCLE_DURATION, CYCLE_DURATION * SAMPLINGRATE // 1000)
@@ -59,13 +58,12 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     @pyqtSlot()
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
-        print(data)
-        if data:
-            if '.npy' in data:
-                self.filepath = data.strip()
-                self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
-                self.recording_completed.emit()
-        self.pushRUN.setEnabled(True)
+        if '.npy' in data:
+            self.filepath = data.strip()
+            self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
+            self.recording_completed.emit()
+        else:
+            self.handle_stderr()
 
     @pyqtSlot()
     def handle_stderr(self):
@@ -79,7 +77,6 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     @pyqtSlot()
     def start_recording(self):
-        self.pushRUN.setEnabled(False)
         ear = 'left' if self.radioLeftEAR.isChecked() else 'right' if self.radioRightEAR.isChecked() else 'both'
         self.labelStatus.setText(f"Recording for {ear} ear{'s' if ear == 'both' else ''}, "
                                  f"frequency {self.comboBoxFreq.currentText()} Hz, "
@@ -103,7 +100,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
 def run_ui():
     app = QApplication(sys.argv)
-    window = MainWindow(process_path='desktop_serial.py')
+    window = MainWindow(process_path='simserial.py')
     window.show()
     app.exec()
 
