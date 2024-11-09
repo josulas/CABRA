@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>782</width>
+    <width>992</width>
     <height>639</height>
    </rect>
   </property>
@@ -32,9 +32,11 @@
       <property name="styleSheet">
        <string notr="true">background-color: rgb(55, 50, 50);
 gridline-color: rgb(0, 0, 0);
+color: rgb(0, 0, 0);
 border-color: rgb(0, 0, 0);
-font: 9pt &quot;Arialt&quot;;
-color: rgb(255, 255, 255);</string>
+font: 9pt &quot;Arial&quot;;
+color: rgb(255, 255, 255);
+</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::Shape::StyledPanel</enum>
@@ -211,6 +213,9 @@ color: rgb(255, 255, 255);</string>
          </item>
          <item row="2" column="1">
           <widget class="QSpinBox" name="spinCycleDuration">
+           <property name="styleSheet">
+            <string notr="true">border-color: rgb(0, 0, 0);</string>
+           </property>
            <property name="suffix">
             <string> [ms]</string>
            </property>
@@ -228,18 +233,21 @@ color: rgb(255, 255, 255);</string>
          </property>
          <property name="minimumSize">
           <size>
-           <width>100</width>
+           <width>80</width>
            <height>0</height>
           </size>
          </property>
          <property name="font">
           <font>
-           <family>Arialt</family>
+           <family>Arial</family>
            <pointsize>9</pointsize>
            <italic>false</italic>
            <bold>false</bold>
            <kerning>true</kerning>
           </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(91, 83, 83);</string>
          </property>
          <property name="text">
           <string>RUN</string>
@@ -252,6 +260,50 @@ color: rgb(255, 255, 255);</string>
            <width>20</width>
            <height>20</height>
           </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushEVOKED">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(131, 153, 105);
+color: rgb(0, 0, 0);</string>
+         </property>
+         <property name="text">
+          <string>Evoked</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::AudioVolumeHigh"/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushNOISE">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(91, 83, 83);
+background-color: rgb(199, 122, 108);
+color:rgb(0,0,0);</string>
+         </property>
+         <property name="text">
+          <string>Noise</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::AudioVolumeMuted"/>
+         </property>
+         <property name="checkable">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -281,7 +333,7 @@ color: rgb(255, 255, 255);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>782</width>
+     <width>992</width>
      <height>22</height>
     </rect>
    </property>

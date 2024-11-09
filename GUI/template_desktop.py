@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(782, 639)
+        MainWindow.resize(992, 639)
         self.actionSave = QAction(MainWindow)
         self.actionSave.setObjectName(u"actionSave")
         self.actionNumber_of_clicks = QAction(MainWindow)
@@ -47,9 +47,11 @@ class Ui_MainWindow(object):
         self.frameControl.setMinimumSize(QSize(0, 100))
         self.frameControl.setStyleSheet(u"background-color: rgb(55, 50, 50);\n"
 "gridline-color: rgb(0, 0, 0);\n"
+"color: rgb(0, 0, 0);\n"
 "border-color: rgb(0, 0, 0);\n"
-"font: 9pt \"Arialt\";\n"
-"color: rgb(255, 255, 255);")
+"font: 9pt \"Arial\";\n"
+"color: rgb(255, 255, 255);\n"
+"")
         self.frameControl.setFrameShape(QFrame.Shape.StyledPanel)
         self.frameControl.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout = QHBoxLayout(self.frameControl)
@@ -164,6 +166,7 @@ class Ui_MainWindow(object):
 
         self.spinCycleDuration = QSpinBox(self.frameControl)
         self.spinCycleDuration.setObjectName(u"spinCycleDuration")
+        self.spinCycleDuration.setStyleSheet(u"border-color: rgb(0, 0, 0);")
 
         self.formCLick.setWidget(2, QFormLayout.FieldRole, self.spinCycleDuration)
 
@@ -177,19 +180,47 @@ class Ui_MainWindow(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.pushRUN.sizePolicy().hasHeightForWidth())
         self.pushRUN.setSizePolicy(sizePolicy2)
-        self.pushRUN.setMinimumSize(QSize(100, 0))
+        self.pushRUN.setMinimumSize(QSize(80, 0))
         font = QFont()
-        font.setFamilies([u"Arialt"])
+        font.setFamilies([u"Arial"])
         font.setPointSize(9)
         font.setBold(False)
         font.setItalic(False)
         font.setKerning(True)
         self.pushRUN.setFont(font)
+        self.pushRUN.setStyleSheet(u"background-color: rgb(91, 83, 83);")
         icon = QIcon(QIcon.fromTheme(u"media-playback-start"))
         self.pushRUN.setIcon(icon)
         self.pushRUN.setIconSize(QSize(20, 20))
 
         self.horizontalLayout.addWidget(self.pushRUN)
+
+        self.pushEVOKED = QPushButton(self.frameControl)
+        self.pushEVOKED.setObjectName(u"pushEVOKED")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.pushEVOKED.sizePolicy().hasHeightForWidth())
+        self.pushEVOKED.setSizePolicy(sizePolicy3)
+        self.pushEVOKED.setStyleSheet(u"background-color: rgb(131, 153, 105);\n"
+"color: rgb(0, 0, 0);")
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeHigh))
+        self.pushEVOKED.setIcon(icon1)
+
+        self.horizontalLayout.addWidget(self.pushEVOKED)
+
+        self.pushNOISE = QPushButton(self.frameControl)
+        self.pushNOISE.setObjectName(u"pushNOISE")
+        sizePolicy3.setHeightForWidth(self.pushNOISE.sizePolicy().hasHeightForWidth())
+        self.pushNOISE.setSizePolicy(sizePolicy3)
+        self.pushNOISE.setStyleSheet(u"background-color: rgb(91, 83, 83);\n"
+"background-color: rgb(199, 122, 108);\n"
+"color:rgb(0,0,0);")
+        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeMuted))
+        self.pushNOISE.setIcon(icon2)
+        self.pushNOISE.setCheckable(False)
+
+        self.horizontalLayout.addWidget(self.pushNOISE)
 
 
         self.verticalLayout.addWidget(self.frameControl)
@@ -201,18 +232,18 @@ class Ui_MainWindow(object):
 
         self.labelStatus = QLabel(self.centralwidget)
         self.labelStatus.setObjectName(u"labelStatus")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.labelStatus.sizePolicy().hasHeightForWidth())
-        self.labelStatus.setSizePolicy(sizePolicy3)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.labelStatus.sizePolicy().hasHeightForWidth())
+        self.labelStatus.setSizePolicy(sizePolicy4)
 
         self.verticalLayout.addWidget(self.labelStatus)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 782, 22))
+        self.menubar.setGeometry(QRect(0, 0, 992, 22))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuOption = QMenu(self.menubar)
@@ -258,6 +289,8 @@ class Ui_MainWindow(object):
         self.labelCycleDuration.setText(QCoreApplication.translate("MainWindow", u"Cycle duration:", None))
         self.spinCycleDuration.setSuffix(QCoreApplication.translate("MainWindow", u" [ms]", None))
         self.pushRUN.setText(QCoreApplication.translate("MainWindow", u"RUN", None))
+        self.pushEVOKED.setText(QCoreApplication.translate("MainWindow", u"Evoked", None))
+        self.pushNOISE.setText(QCoreApplication.translate("MainWindow", u"Noise", None))
         self.labelStatus.setText(QCoreApplication.translate("MainWindow", u"Set the parameters for the experiment, and hit RUN", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuOption.setTitle(QCoreApplication.translate("MainWindow", u"Options", None))
