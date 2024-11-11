@@ -3,5 +3,5 @@ simpleaudio
 scipy
 pyqtgraph
 pyserial
-pyqt5
+PySide6
 RPi.GPIO
