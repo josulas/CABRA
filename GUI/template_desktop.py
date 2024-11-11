@@ -203,6 +203,7 @@ class Ui_MainWindow(object):
         sizePolicy3.setHeightForWidth(self.pushEVOKED.sizePolicy().hasHeightForWidth())
         self.pushEVOKED.setSizePolicy(sizePolicy3)
         self.pushEVOKED.setStyleSheet(u"background-color: rgb(131, 153, 105);\n"
+"alternate-background-color: rgb(36, 31, 49);\n"
 "color: rgb(0, 0, 0);")
         icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeHigh))
         self.pushEVOKED.setIcon(icon1)
@@ -213,7 +214,7 @@ class Ui_MainWindow(object):
         self.pushNOISE.setObjectName(u"pushNOISE")
         sizePolicy3.setHeightForWidth(self.pushNOISE.sizePolicy().hasHeightForWidth())
         self.pushNOISE.setSizePolicy(sizePolicy3)
-        self.pushNOISE.setStyleSheet(u"background-color: rgb(91, 83, 83);\n"
+        self.pushNOISE.setStyleSheet(u"alternate-background-color: rgb(36, 31, 49);\n"
 "background-color: rgb(199, 122, 108);\n"
 "color:rgb(0,0,0);")
         icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeMuted))
@@ -243,7 +244,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 992, 22))
+        self.menubar.setGeometry(QRect(0, 0, 992, 23))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuOption = QMenu(self.menubar)

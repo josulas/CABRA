@@ -273,6 +273,7 @@ color: rgb(255, 255, 255);
          </property>
          <property name="styleSheet">
           <string notr="true">background-color: rgb(131, 153, 105);
+alternate-background-color: rgb(36, 31, 49);
 color: rgb(0, 0, 0);</string>
          </property>
          <property name="text">
@@ -292,7 +293,7 @@ color: rgb(0, 0, 0);</string>
           </sizepolicy>
          </property>
          <property name="styleSheet">
-          <string notr="true">background-color: rgb(91, 83, 83);
+          <string notr="true">alternate-background-color: rgb(36, 31, 49);
 background-color: rgb(199, 122, 108);
 color:rgb(0,0,0);</string>
          </property>
@@ -334,7 +335,7 @@ color:rgb(0,0,0);</string>
      <x>0</x>
      <y>0</y>
      <width>992</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

@@ -21,6 +21,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         # Plot setup
         self.evoked_X_axis = np.linspace(0, CYCLE_DURATION, CYCLE_DURATION * SAMPLINGRATE // 1000)
+        self.nulldata = np.zeros_like(self.evoked_X_axis)
+        self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen='red')
         self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
         self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
 
@@ -30,6 +32,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.id_max = len(self.amplitudes) - 1
         self.id_mid = (self.id_min + self.id_max) // 2
         self.dbamp = self.amplitudes[self.id_mid]
+        self.prev_dbamp = self.dbamp
 
         # Clicker init config
         self.nclicks = NCLICKS
@@ -56,9 +59,19 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.pushNOISE.setEnabled(False)
         self.heard = False
 
-        # Audiogram
-        self.audiogram_left = np.zeros(self.comboBoxFreq.count())
-        self.audiogram_right = np.zeros(self.comboBoxFreq.count())
+        # Customize color for pushEVOKED and pushNOISE when disabled (set to gray)
+        self.pushEVOKED.setStyleSheet("""
+            QPushButton:disabled { background-color: gray; }
+            QPushButton { background-color: rgb(131, 153, 105); }
+        """)
+        self.pushNOISE.setStyleSheet("""
+            QPushButton:disabled { background-color: gray; }
+            QPushButton { background-color: rgb(199, 122, 108); }
+        """)
+
+        # Initialize audiograms as nan arrays
+        self.audiogram_left = np.ones(self.comboBoxFreq.count())*np.nan
+        self.audiogram_right = np.ones(self.comboBoxFreq.count())*np.nan
 
     def change_max_click_duration(self):
         """
@@ -68,6 +81,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.spinClickDuration.setMaximum(self.spinCycleDuration.value())
 
     def update_mid_dbapm(self):
+        self.prev_dbamp = self.dbamp
         self.id_mid = (self.id_min + self.id_max) // 2
         self.dbamp = self.amplitudes[self.id_mid]
 
@@ -153,12 +167,29 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def handle_recording_completed(self):
         # Update status
-        self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
+        self.labelStatus.setText(f"Recording completed and stored at {self.filepath}. Indicate if the sound was heard.")
         # Set pushNOISE and pushEVOKED to be enabled
         self.pushEVOKED.setEnabled(True)
         self.pushNOISE.setEnabled(True)
         # Plot
         self.plot_evoked()
+
+    def audiogram_is_ready(self):
+        """
+        Check if the audiogram is ready to be saved
+        """
+        return not np.isnan(self.audiogram_left).any() and not np.isnan(self.audiogram_right).any()
+
+    @staticmethod
+    def audiogram_ready_popup():
+        """
+        Popup window to indicate that the audiogram is ready
+        """
+        msg_box = QMessageBox()
+        msg_box.setText("Audiogram is ready.")
+        msg_box.setInformativeText("The audiogram is ready to be saved.")
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.exec()
 
     def perform_audiometry_test(self):
         """
@@ -167,21 +198,42 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         """
 
         if self.id_min < self.id_max:
+            self.pushRUN.setEnabled(False)
             self.start_recording()
 
         else:
+            # Disable the evoked/noise buttons
+            self.pushEVOKED.setEnabled(False)
+            self.pushNOISE.setEnabled(False)
+            self.pushRUN.setEnabled(True)
+
+            # Update the status label and the audiogram
+            frequency = self.comboBoxFreq.currentText()
+            ear = 'left' if self.radioLeftEAR.isChecked() else 'right' if self.radioRightEAR.isChecked() else 'both'
+            self.labelStatus.setText(f"Hearing threshold for {ear} ear at frequency = {frequency} [Hz]:"
+                                     f" {self.prev_dbamp} [dbHL]")
+
+            if ear == 'left':
+                self.audiogram_left[self.comboBoxFreq.currentIndex()] = self.prev_dbamp
+            elif ear == 'right':
+                self.audiogram_right[self.comboBoxFreq.currentIndex()] = self.prev_dbamp
+
+
             # Reset the amplitude range
             self.id_min = 0
             self.id_max = len(self.amplitudes) - 1
             self.id_mid = (self.id_min + self.id_max) // 2
             self.dbamp = self.amplitudes[self.id_mid]
 
-            # Update the status label and the audiogram
-            frequency = self.comboBoxFreq.currentText()
-            threshold = self.amplitudes[self.id_mid]
-            self.labelStatus.setText(f"Hearing threshold for frequency = {frequency} [Hz]: {threshold} [dbHL] ")
-            self.audiogram_left[self.comboBoxFreq.currentIndex()] = threshold
-            # self.plot_audiogram()
+            # Check if the audiogram is ready to be saved
+            print(self.audiogram_left)
+            print(self.audiogram_right)
+            if self.audiogram_is_ready():
+                self.audiogram_ready_popup()
+                self.plot_audiogram()
+            else:
+                self.plotWidget.clear()
+                self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen='red')
 
     def plot_evoked(self):
         if self.filepath:
@@ -192,10 +244,16 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def plot_audiogram(self):
         self.plotWidget.clear()
-        self.plotWidget.plot(self.audiogram_left, pen='green')
-        self.plotWidget.setXRange(0, len(self.audiogram_left), padding=0.)
+        self.plotWidget.plot(self.audiogram_left, pen='green', symbol='o', name='Left Ear')
+        self.plotWidget.plot(self.audiogram_right, pen='blue', symbol='x', name='Right Ear')
+        self.plotWidget.setXRange(0, len(self.audiogram_left) - 1, padding=0.)
         ax = self.plotWidget.getAxis('bottom')
         ax.setTicks([[(i, str(self.comboBoxFreq.itemText(i))) for i in range(len(self.audiogram_left))]])
+        ax.setLabel('Frequency [Hz]')
+        ay = self.plotWidget.getAxis('left')
+        ay.setLabel('Amplitude [dB HL]')
+        self.plotWidget.addLegend()
+        self.labelStatus.setText("Audiogram is ready to be saved.")
 
     # Kill the process when the window is closed
     def closeEvent(self, event):
