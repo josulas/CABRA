@@ -227,7 +227,16 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
     # Abort the current test and reset the state to idle using Ctrl + C
     def abort_test(self):
+        self.process.kill()
+        self.start_process()
+        self.labelStatus.setText("Test aborted.")
         self.state = CABRA_Window.STATE_IDLE
+        self.pushCABRASweep.setEnabled(True)
+        self.pushRUN.setEnabled(True)
+        self.pushEVOKED.setEnabled(False)
+        self.pushNOISE.setEnabled(False)
+        self.reset_dbamp()
+        self.plot_null()
 
 
     def audiogram_is_ready(self):
