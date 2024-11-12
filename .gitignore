@@ -8,4 +8,5 @@ venv/
 .venv/
 *__pycache__/
 .idea/
-GUI/saved_data
+GUI/saved_data/
+GUI/saved_audiometries/
