@@ -47,6 +47,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.id_max = len(self.amplitudes) - 1
         self.id_mid = (self.id_min + self.id_max) // 2
         self.dbamp = self.amplitudes[self.id_mid]
+        self.prev_dbamp = self.dbamp
 
         # Clicker init config
         self.nclicks = NCLICKS
@@ -63,7 +64,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.process = QProcess(self)
         self.process_path = process_path
         self.start_process()
-        self.pushRUN.clicked.connect(self.on_click_pushRUN)
+        self.pushRUN.clicked.connect(self.perform_audiometry_test)
         self.recording_completed.connect(self.handle_recording_completed)
 
         # pushEVOKED and pushNOISE are disabled until recording is completed
@@ -71,6 +72,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.pushEVOKED.setEnabled(False)
         self.pushNOISE.clicked.connect(self.go_louder)
         self.pushNOISE.setEnabled(False)
+        self.heard = False
 
         # Customize color for pushEVOKED and pushNOISE when disabled (set to gray)
         self.pushEVOKED.setStyleSheet("""
@@ -241,7 +243,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
             self.plotWidget.clear()
             self.plotWidget.plot(self.evoked_X_axis, evoked, pen='red')
             self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
-            self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
 
     def plot_audiogram(self):
         """
@@ -282,6 +283,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         Update the amplitude to the midpoint of the current range. Keep track of the last amplitude.
         """
+        self.prev_dbamp = self.dbamp
         self.id_mid = (self.id_min + self.id_max) // 2
         self.dbamp = self.amplitudes[self.id_mid]
 
@@ -292,8 +294,11 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         Notice that the method updated the midpoint in a binary search fashion.
         This method is called by the pushEVOKED button
         """
+        self.heard = True
         self.id_max = self.id_mid
-        self.continue_audiometry_test()
+        self.update_mid_dbapm()
+        self.state = CABRA_Window.STATE_RUNNING
+        self.perform_audiometry_test()
 
     def go_louder(self):
         """
@@ -301,28 +306,11 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         It will update the amplitude range, and perform the next audiometry test.
         This method is called by the pushNOISE button
         """
+        self.heard = False
         self.id_min = self.id_mid + 1
-        self.continue_audiometry_test()
-
-    def continue_audiometry_test(self):
-        """
-        The recursive step in the audiometry test algorithm, triggerd by either the pushEVOKED or pushNOISE buttons.
-        """
-        if self.id_min < self.id_max:
-            self.update_mid_dbapm()
-            self.state = CABRA_Window.STATE_RUNNING
-        else:
-            self.state = CABRA_Window.STATE_COMPLETED
-        self.perform_audiometry_test()
-
-    def on_click_pushRUN(self):
-        """
-        Activate the RUNNING state, and perform audiometry. Make sure CABRASweep is not running beforehand
-        """
-        self.in_CABRASweep = False
+        self.update_mid_dbapm()
         self.state = CABRA_Window.STATE_RUNNING
-        self.perform_audiometry_test()
-
+        self.perform_audiometry_test()  # ugliest recursion ever. I hope my future employers don't find this code
     def perform_audiometry_test(self):
         """
         For a given frequency and ear, perform the audiometry test to detect the hearing threshold,
@@ -332,10 +320,16 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
 
         if self.state == CABRA_Window.STATE_RUNNING:
-            # Record ABR for the current amplitude
-            self.pushRUN.setEnabled(False)
-            self.start_recording()
-            self.state = CABRA_Window.STATE_WAITING_FOR_USER
+        # Normal operation, perform the audiometry test using binary search
+            if self.id_min < self.id_max:
+                # Record ABR for the current amplitude
+                self.pushRUN.setEnabled(False)
+                self.start_recording()
+                self.state = CABRA_Window.STATE_WAITING_FOR_USER
+
+            else:
+                # Binary seach converged
+                self.complete_current_test()
 
         elif self.state == CABRA_Window.STATE_WAITING_FOR_USER:
             # Wait for the user to indicate if the sound was heard (handled by pushEVOKED and pushNOISE)
@@ -362,13 +356,13 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         frequency = self.comboBoxFreq.currentText()
         ear = 'left' if self.radioLeftEAR.isChecked() else 'right' if self.radioRightEAR.isChecked() else 'both'
         self.labelStatus.setText(f"Hearing threshold for {ear} ear at frequency = {frequency} [Hz]:"
-                                 f" {self.dbamp} [dbHL]")
+                                 f" {self.prev_dbamp} [dbHL]")
 
         # Update the audiogram threshold level for the relevant frequency
         if ear == 'left':
-            self.audiogram_left[self.comboBoxFreq.currentIndex()] = self.dbamp
+            self.audiogram_left[self.comboBoxFreq.currentIndex()] = self.prev_dbamp
         elif ear == 'right':
-            self.audiogram_right[self.comboBoxFreq.currentIndex()] = self.dbamp
+            self.audiogram_right[self.comboBoxFreq.currentIndex()] = self.prev_dbamp
 
         self.reset_dbamp()
 
