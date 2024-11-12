@@ -2,16 +2,18 @@ import sys
 import os
 from datetime import datetime
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
-from PySide6.QtCore import QProcess, Slot as pyqtSlot, Signal as pyqtSignal, QEventLoop
+from PySide6.QtCore import QProcess, Slot as pyqtSlot, Signal as pyqtSignal
+from PySide6.QtGui import QShortcut, QKeySequence
 from pyqtgraph.exporters import ImageExporter
+from pyqtgraph import mkPen
 import numpy as np
 from template_desktop import Ui_MainWindow
 from playaudio import EarSelect, CLICK_DURATION, CYCLE_DURATION
-from simserial import Actions
+from desktop_serial import Actions, SAMPLINGRATE
 
-NCLICKS = 5
-SAMPLINGRATE = 10_000  # Hz (DO NOT CHANGE)
+NCLICKS = 500
 OUTPUT_DIR = 'saved_audiometries'
+
 
 class CABRA_Window(Ui_MainWindow, QMainWindow):
     # Define states
@@ -33,10 +35,18 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.current_ear = EarSelect.LEFT
         self.in_CABRASweep = False
 
+        # Pens
+        self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
+        self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o')
+        self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x')
+
+        # Checkbone also modifies the pen, so we might as well set it up right now
+        self.checkBone.stateChanged.connect(self.checkbone_changed)
+
         # Plot setup
         self.evoked_X_axis = np.linspace(0, CYCLE_DURATION, CYCLE_DURATION * SAMPLINGRATE // 1000)
         self.nulldata = np.zeros_like(self.evoked_X_axis)
-        self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen='red')
+        self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen=self.evoked_pen)
         self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
         self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
         self.audiogram_figure_ready = False
@@ -45,7 +55,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.amplitudes = CABRA_Window.valid_amplitudes
         self.id_min = 0
         self.id_max = len(self.amplitudes) - 1
-        self.id_mid = (self.id_min + self.id_max) // 2
+        self.id_mid = 2 # 0 [dbHL]
         self.dbamp = self.amplitudes[self.id_mid]
         self.prev_dbamp = self.dbamp
 
@@ -85,11 +95,28 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """)
 
         # Initialize audiograms as nan arrays
-        self.audiogram_left = np.ones(self.comboBoxFreq.count())*np.nan
-        self.audiogram_right = np.ones(self.comboBoxFreq.count())*np.nan
+        self.audiogram_left = np.ones(self.comboBoxFreq.count()) * np.nan
+        self.audiogram_right = np.ones(self.comboBoxFreq.count()) * np.nan
 
         # Connect the CABRASweep button
         self.pushCABRASweep.clicked.connect(self.CABRASweep)
+
+        # Bind Ctrl + C to abort_test
+        self.abort_shortcut = QShortcut(QKeySequence("Ctrl+C"), self)
+        self.abort_shortcut.activated.connect(self.abort_test)
+
+    def checkbone_changed(self):
+        """
+        Change the pen color for the evoked potential plot
+        """
+        if self.checkBone.isChecked():
+            self.evoked_pen = mkPen(color=(0, 255, 0), width=2)
+            self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='.')
+            self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='.')
+        else:
+            self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
+            self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o')
+            self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x')
 
     def change_max_click_duration(self):
         """
@@ -97,7 +124,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         Modify the minimum value of the click duration spinbox accordingly
         """
         self.spinClickDuration.setMaximum(self.spinCycleDuration.value())
-
 
     ##################################################################################################
     # The following methods are related to the communication with the process and the GUI operation #
@@ -153,7 +179,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
             self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
             self.recording_completed.emit()
         else:
-            self.handle_stderr()
+            self.handle_stderr
 
     @pyqtSlot()
     def handle_stderr(self):
@@ -171,6 +197,9 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         elif output == '2':
             self.labelStatus.setText("Runtime error occurred.")
+            # TODO: Handle runtime error properly
+            self.process.kill()
+            self.start_process()
         elif output == '3':
             self.labelStatus.setText("Value error occurred.")
 
@@ -197,6 +226,11 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     ##############################################################################################
     # The following methods are related to the audiometry test, and the audiogram plotting/saving #
     ##############################################################################################
+
+    # Abort the current test and reset the state to idle using Ctrl + C
+    def abort_test(self):
+        self.state = CABRA_Window.STATE_IDLE
+
 
     def audiogram_is_ready(self):
         """
@@ -234,6 +268,15 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         self.labelStatus.setText(f"Audiogram saved to {fname}")
 
+    def plot_null(self):
+        """
+        Plot a null graph
+        """
+        self.plotWidget.clear()
+        self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen=self.evoked_pen)
+        self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
+        self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
+
     def plot_evoked(self):
         """
         Plot the evoked potential
@@ -241,7 +284,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         if self.filepath:
             evoked = np.load(self.filepath)
             self.plotWidget.clear()
-            self.plotWidget.plot(self.evoked_X_axis, evoked, pen='red')
+            self.plotWidget.plot(self.evoked_X_axis, evoked, pen=self.evoked_pen)
             self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
 
     def plot_audiogram(self):
@@ -276,7 +319,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         self.id_min = 0
         self.id_max = len(self.amplitudes) - 1
-        self.id_mid = (self.id_min + self.id_max) // 2
+        self.id_mid = 2  # 0 [dbHL] is at position 1, always
         self.dbamp = self.amplitudes[self.id_mid]
 
     def update_mid_dbapm(self):
@@ -372,8 +415,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
             self.plot_audiogram()
             self.save_audiogram()
         else:
-            self.plotWidget.clear()
-            self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen='red')
+            self.plot_null()
 
         # Continue the CABRASweep if necessary
         if self.in_CABRASweep:
@@ -450,7 +492,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
 def run_ui():
     app = QApplication(sys.argv)
-    window = CABRA_Window(process_path='simserial.py')
+    window = CABRA_Window(process_path='desktop_serial.py')
     window.show()
     app.exec()
 
