@@ -15,12 +15,19 @@ OUTPUT_DIR = 'saved_audiometries'
 
 
 class MainWindow(Ui_MainWindow, QMainWindow):
+    # Define states
+    STATE_IDLE = 0
+    STATE_RUNNING = 1
+    STATE_WAITING_FOR_USER = 2
+    STATE_COMPLETED = 3
+
     recording_completed = pyqtSignal()
     valid_amplitudes = list(range(-10, 50, 10))
 
     def __init__(self, process_path):
         super().__init__()
         self.setupUi(self)
+        self.state = MainWindow.STATE_IDLE
 
         # Plot setup
         self.evoked_X_axis = np.linspace(0, CYCLE_DURATION, CYCLE_DURATION * SAMPLINGRATE // 1000)
@@ -77,12 +84,22 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.audiogram_left = np.ones(self.comboBoxFreq.count())*np.nan
         self.audiogram_right = np.ones(self.comboBoxFreq.count())*np.nan
 
+        # Connect the CABRASweep button
+        self.pushCABRASweep.clicked.connect(self.CABRASweep)
+
     def change_max_click_duration(self):
         """
         Click duration must be smaller that cycle duration
         Modify the minimum value of the click duration spinbox accordingly
         """
         self.spinClickDuration.setMaximum(self.spinCycleDuration.value())
+
+    def reset_dbamp(self):
+        # Reset the amplitude range
+        self.id_min = 0
+        self.id_max = len(self.amplitudes) - 1
+        self.id_mid = (self.id_min + self.id_max) // 2
+        self.dbamp = self.amplitudes[self.id_mid]
 
     def update_mid_dbapm(self):
         self.prev_dbamp = self.dbamp
@@ -227,7 +244,6 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def plot_audiogram(self):
         """
         Plot the audiogram once it's finished. The 'save_audiogram' shoud be saved right after this function.
-        :return:
         """
         # Plotting
         self.plotWidget.clear()
@@ -251,6 +267,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         """
         For a given frequency and ear, perform the audiometry test to detect the hearing threshold,
         by varying the amplitude of the sound stimulus and recording the evoked potential.
+
+        NOTE: This function is recursive, and will call itself until the audiometry test is completed.
         """
 
         if self.id_min < self.id_max:
@@ -274,12 +292,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             elif ear == 'right':
                 self.audiogram_right[self.comboBoxFreq.currentIndex()] = self.prev_dbamp
 
-
-            # Reset the amplitude range
-            self.id_min = 0
-            self.id_max = len(self.amplitudes) - 1
-            self.id_mid = (self.id_min + self.id_max) // 2
-            self.dbamp = self.amplitudes[self.id_mid]
+            self.reset_dbamp()
 
             # Check if the audiogram is ready to be saved
             print(self.audiogram_left)
@@ -292,6 +305,25 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 self.plotWidget.clear()
                 self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen='red')
 
+    def CABRASweep(self):
+        """
+        Perform a sweep of the audiometry test for all frequencies and ears
+        """
+        for widget in [self.pushCABRASweep,  self.pushRUN, self.spinClickDuration,
+                       self.spinCycleDuration, self.checkBone, self.nameEdit,
+                       self.dateEdit, self.lineID]:
+            widget.setEnabled(False)
+
+        for freq_idx in range(self.comboBoxFreq.count()):
+            print(f"{freq_idx=}")
+            self.comboBoxFreq.setCurrentIndex(freq_idx)
+            for ear in [EarSelect.LEFT, EarSelect.RIGHT]:
+                print(f"{ear=}")
+                if ear == EarSelect.LEFT:
+                    self.radioLeftEAR.setChecked(True)
+                elif ear == EarSelect.RIGHT:
+                    self.radioRightEAR.setChecked(True)
+                self.perform_audiometry_test()
 
     # Kill the process when the window is closed
     def closeEvent(self, event):

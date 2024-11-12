@@ -92,7 +92,7 @@ def main():
                 audio_limit = fake_audio_limits[freq_index][0 if ear == EarSelect.LEFT else 1]
                 out_path = EVOKED_PATH if click_dbamp >= audio_limit else NOISE_PATH
                 # Simulate recording for 3 seconds, and write output
-                # time.sleep(1)
+                time.sleep(1)
                 sys.stdout.write(out_path)
                 sys.stdout.flush()
             case Actions.RESET:

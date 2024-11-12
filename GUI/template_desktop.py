@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(992, 639)
+        MainWindow.resize(818, 639)
         self.actionSave = QAction(MainWindow)
         self.actionSave.setObjectName(u"actionSave")
         self.actionNumber_of_clicks = QAction(MainWindow)
@@ -104,7 +104,7 @@ class Ui_MainWindow(object):
 
         self.VLayoutEAR = QVBoxLayout()
         self.VLayoutEAR.setObjectName(u"VLayoutEAR")
-        self.VLayoutEAR.setContentsMargins(20, -1, -1, -1)
+        self.VLayoutEAR.setContentsMargins(20, -1, 20, -1)
         self.HLayoutEar = QHBoxLayout()
         self.HLayoutEar.setObjectName(u"HLayoutEar")
         self.radioLeftEAR = QRadioButton(self.frameControl)
@@ -125,6 +125,16 @@ class Ui_MainWindow(object):
         self.checkBone.setObjectName(u"checkBone")
 
         self.VLayoutEAR.addWidget(self.checkBone)
+
+        self.pushCABRASweep = QPushButton(self.frameControl)
+        self.pushCABRASweep.setObjectName(u"pushCABRASweep")
+        self.pushCABRASweep.setStyleSheet(u"background-color: rgb(230, 97, 0);\n"
+"color: rgb(0, 0, 0);\n"
+"font: italic 10pt \"Arial Black\";")
+        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ZoomFitBest))
+        self.pushCABRASweep.setIcon(icon)
+
+        self.VLayoutEAR.addWidget(self.pushCABRASweep)
 
 
         self.horizontalLayout.addLayout(self.VLayoutEAR)
@@ -189,8 +199,8 @@ class Ui_MainWindow(object):
         font.setKerning(True)
         self.pushRUN.setFont(font)
         self.pushRUN.setStyleSheet(u"background-color: rgb(91, 83, 83);")
-        icon = QIcon(QIcon.fromTheme(u"media-playback-start"))
-        self.pushRUN.setIcon(icon)
+        icon1 = QIcon(QIcon.fromTheme(u"media-playback-start"))
+        self.pushRUN.setIcon(icon1)
         self.pushRUN.setIconSize(QSize(20, 20))
 
         self.horizontalLayout.addWidget(self.pushRUN)
@@ -205,8 +215,8 @@ class Ui_MainWindow(object):
         self.pushEVOKED.setStyleSheet(u"background-color: rgb(131, 153, 105);\n"
 "alternate-background-color: rgb(36, 31, 49);\n"
 "color: rgb(0, 0, 0);")
-        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeHigh))
-        self.pushEVOKED.setIcon(icon1)
+        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeHigh))
+        self.pushEVOKED.setIcon(icon2)
 
         self.horizontalLayout.addWidget(self.pushEVOKED)
 
@@ -217,8 +227,8 @@ class Ui_MainWindow(object):
         self.pushNOISE.setStyleSheet(u"alternate-background-color: rgb(36, 31, 49);\n"
 "background-color: rgb(199, 122, 108);\n"
 "color:rgb(0,0,0);")
-        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeMuted))
-        self.pushNOISE.setIcon(icon2)
+        icon3 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeMuted))
+        self.pushNOISE.setIcon(icon3)
         self.pushNOISE.setCheckable(False)
 
         self.horizontalLayout.addWidget(self.pushNOISE)
@@ -244,7 +254,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 992, 23))
+        self.menubar.setGeometry(QRect(0, 0, 818, 23))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuOption = QMenu(self.menubar)
@@ -277,6 +287,7 @@ class Ui_MainWindow(object):
         self.radioLeftEAR.setText(QCoreApplication.translate("MainWindow", u"Left ear", None))
         self.radioRightEAR.setText(QCoreApplication.translate("MainWindow", u"Right ear", None))
         self.checkBone.setText(QCoreApplication.translate("MainWindow", u"Bone conduction headset", None))
+        self.pushCABRASweep.setText(QCoreApplication.translate("MainWindow", u"CABRA Sweep", None))
         self.labelFreq.setText(QCoreApplication.translate("MainWindow", u"Frequency [Hz]:", None))
         self.comboBoxFreq.setItemText(0, QCoreApplication.translate("MainWindow", u"250", None))
         self.comboBoxFreq.setItemText(1, QCoreApplication.translate("MainWindow", u"500", None))
