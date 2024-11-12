@@ -1,7 +1,9 @@
 import sys
+import os
+from datetime import datetime
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
-from PySide6.QtCore import QCoreApplication
 from PySide6.QtCore import QProcess, Slot as pyqtSlot, Signal as pyqtSignal, QEventLoop
+from pyqtgraph.exporters import ImageExporter
 import numpy as np
 from template_desktop import Ui_MainWindow
 from playaudio import EarSelect, CLICK_DURATION, CYCLE_DURATION
@@ -9,6 +11,7 @@ from simserial import Actions
 
 NCLICKS = 5
 SAMPLINGRATE = 10_000  # Hz (DO NOT CHANGE)
+OUTPUT_DIR = 'saved_audiometries'
 
 
 class MainWindow(Ui_MainWindow, QMainWindow):
@@ -25,6 +28,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen='red')
         self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
         self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
+        self.audiogram_figure_ready = False
 
         # Amplitude setup, initialize to midpoint
         self.amplitudes = MainWindow.valid_amplitudes
@@ -191,6 +195,58 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         msg_box.setStandardButtons(QMessageBox.Ok)
         msg_box.exec()
 
+    def save_audiogram(self):
+        """
+        Save the audiogram to a .csv file, and its plot as a .png
+        """
+        audiogram = np.array([self.audiogram_left, self.audiogram_right])
+        fname = f"{self.nameEdit.text()}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+        np.savetxt(os.path.join(OUTPUT_DIR, f"{fname}.csv"), audiogram, delimiter=',')
+
+        # Save the audiogram plot
+        if self.audiogram_figure_ready:
+            size = self.plotWidget.size()
+            exporter = ImageExporter(self.plotWidget.plotItem)
+            exporter.parameters()['width'] = size.width()
+            exporter.parameters()['height'] = size.height()
+            exporter.export(os.path.join(OUTPUT_DIR, f"{fname}.png"))
+            self.audiogram_figure_ready = False
+
+        self.labelStatus.setText(f"Audiogram saved to {fname}")
+
+    def plot_evoked(self):
+        """
+        Plot the evoked potential
+        """
+        if self.filepath:
+            evoked = np.load(self.filepath)
+            self.plotWidget.clear()
+            self.plotWidget.plot(self.evoked_X_axis, evoked, pen='red')
+            self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
+
+    def plot_audiogram(self):
+        """
+        Plot the audiogram once it's finished. The 'save_audiogram' shoud be saved right after this function.
+        :return:
+        """
+        # Plotting
+        self.plotWidget.clear()
+        self.plotWidget.plot(self.audiogram_left, pen='green', symbol='o', name='Left Ear')
+        self.plotWidget.plot(self.audiogram_right, pen='blue', symbol='x', name='Right Ear')
+        self.plotWidget.setXRange(0, len(self.audiogram_left) - 1, padding=0.)
+        self.plotWidget.setTitle(f"Audiogram for {self.nameEdit.text()}")
+
+        # Axis setup
+        ax = self.plotWidget.getAxis('bottom')
+        ax.setTicks([[(i, str(self.comboBoxFreq.itemText(i))) for i in range(len(self.audiogram_left))]])
+        ax.setLabel('Frequency [Hz]')
+        ay = self.plotWidget.getAxis('left')
+        ay.setLabel('Amplitude [dB HL]')
+        self.plotWidget.addLegend()
+
+        # Update the audiogram's save status
+        self.audiogram_figure_ready = True
+
     def perform_audiometry_test(self):
         """
         For a given frequency and ear, perform the audiometry test to detect the hearing threshold,
@@ -231,29 +287,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             if self.audiogram_is_ready():
                 self.audiogram_ready_popup()
                 self.plot_audiogram()
+                self.save_audiogram()
             else:
                 self.plotWidget.clear()
                 self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen='red')
 
-    def plot_evoked(self):
-        if self.filepath:
-            evoked = np.load(self.filepath)
-            self.plotWidget.clear()
-            self.plotWidget.plot(self.evoked_X_axis, evoked, pen='red')
-            self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
-
-    def plot_audiogram(self):
-        self.plotWidget.clear()
-        self.plotWidget.plot(self.audiogram_left, pen='green', symbol='o', name='Left Ear')
-        self.plotWidget.plot(self.audiogram_right, pen='blue', symbol='x', name='Right Ear')
-        self.plotWidget.setXRange(0, len(self.audiogram_left) - 1, padding=0.)
-        ax = self.plotWidget.getAxis('bottom')
-        ax.setTicks([[(i, str(self.comboBoxFreq.itemText(i))) for i in range(len(self.audiogram_left))]])
-        ax.setLabel('Frequency [Hz]')
-        ay = self.plotWidget.getAxis('left')
-        ay.setLabel('Amplitude [dB HL]')
-        self.plotWidget.addLegend()
-        self.labelStatus.setText("Audiogram is ready to be saved.")
 
     # Kill the process when the window is closed
     def closeEvent(self, event):
