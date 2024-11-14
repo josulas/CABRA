@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'template.ui'
+## Form generated from reading UI file 'template_desktop.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.0
 ##
@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(818, 639)
+        MainWindow.resize(864, 639)
         self.actionSave = QAction(MainWindow)
         self.actionSave.setObjectName(u"actionSave")
         self.actionNumber_of_clicks = QAction(MainWindow)
@@ -37,6 +37,10 @@ class Ui_MainWindow(object):
         self.actionTone_burst.setObjectName(u"actionTone_burst")
         self.actionCABRA_Default = QAction(MainWindow)
         self.actionCABRA_Default.setObjectName(u"actionCABRA_Default")
+        self.actionSimulator = QAction(MainWindow)
+        self.actionSimulator.setObjectName(u"actionSimulator")
+        self.actionGoated = QAction(MainWindow)
+        self.actionGoated.setObjectName(u"actionGoated")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -208,10 +212,10 @@ class Ui_MainWindow(object):
         font1.setItalic(False)
         font1.setKerning(True)
         self.pushRUN.setFont(font1)
-        self.pushRUN.setStyleSheet(u"background-color: rgb(255, 163, 72);\n"
+        self.pushRUN.setStyleSheet(u"background-color: rgb(246, 211, 45);\n"
 "color: rgb(0,0,0);\n"
 "font: 700 11pt \"Arial\";")
-        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MultimediaPlayer))
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioInputMicrophone))
         self.pushRUN.setIcon(icon1)
         self.pushRUN.setIconSize(QSize(20, 20))
 
@@ -266,7 +270,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 818, 23))
+        self.menubar.setGeometry(QRect(0, 0, 864, 23))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuOption = QMenu(self.menubar)
@@ -284,6 +288,8 @@ class Ui_MainWindow(object):
         self.menuOption.addAction(self.actionTone_burst)
         self.menuOption.addAction(self.menuMode.menuAction())
         self.menuMode.addAction(self.actionCABRA_Default)
+        self.menuMode.addAction(self.actionSimulator)
+        self.menuMode.addAction(self.actionGoated)
 
         self.retranslateUi(MainWindow)
 
@@ -296,6 +302,8 @@ class Ui_MainWindow(object):
         self.actionNumber_of_clicks.setText(QCoreApplication.translate("MainWindow", u"Number of clicks", None))
         self.actionTone_burst.setText(QCoreApplication.translate("MainWindow", u"Tone burst setup", None))
         self.actionCABRA_Default.setText(QCoreApplication.translate("MainWindow", u"CABRA [Default]", None))
+        self.actionSimulator.setText(QCoreApplication.translate("MainWindow", u"Simulator", None))
+        self.actionGoated.setText(QCoreApplication.translate("MainWindow", u"Goated", None))
         self.labelName.setText(QCoreApplication.translate("MainWindow", u"Name:", None))
         self.labelDOB.setText(QCoreApplication.translate("MainWindow", u"DOB:", None))
         self.labelID.setText(QCoreApplication.translate("MainWindow", u"ID:", None))

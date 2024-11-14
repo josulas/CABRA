@@ -8,7 +8,7 @@ import serial.tools.list_ports
 import numpy as np
 import scipy.signal as signal
 from average_eeg import average_EEG
-from playaudio import Clicker, EarSelect
+from GUI.serial_comm.clicker import Clicker, EarSelect
 
 
 # Board parameters
@@ -34,8 +34,8 @@ SERIAL_RECOGNIZER = "USB to UART Bridge"
 
 # Player parameters
 # Path to the C executable
-PLAYER_PATH_WINDOWS = "./audio_playback.exe"
-PLAYER_PATH_LINUX = "./audio_playback"
+PLAYER_PATH_WINDOWS = "serial_comm/audio_playback.exe"
+PLAYER_PATH_LINUX = "serial_comm/audio_playback_linux"
 TEMP_FILE = "~.wav"
 
 
@@ -123,8 +123,11 @@ class ESPSerial:
         if platform_name == 'win32':
             return subprocess.Popen([PLAYER_PATH_WINDOWS], stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
                            stderr=subprocess.PIPE, text=True)
+        elif platform_name == 'linux':
+            return subprocess.Popen([PLAYER_PATH_LINUX], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE, text=True)
         else:
-            raise OSError("Unsupported platform")
+            raise OSError(F"Platform {platform_name} not supported")
 
     def _init_filter(self) -> np.ndarray:
         """

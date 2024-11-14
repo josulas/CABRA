@@ -11,11 +11,11 @@ from pyqtgraph.exporters import ImageExporter
 from pyqtgraph import mkPen
 import numpy as np
 # Local imports
-from dialog_reconnect import Ui_DialogReconnect
-from dialog_tone_burst import Ui_DialogToneBurst
-from template_desktop import Ui_MainWindow
-from playaudio import EarSelect, CYCLE_DURATION
-from simserial import Actions, SAMPLINGRATE
+from ui_templates.dialog_reconnect import Ui_DialogReconnect
+from ui_templates.dialog_tone_burst import Ui_DialogToneBurst
+from ui_templates.template_desktop import Ui_MainWindow
+from serial_comm.clicker import EarSelect, CYCLE_DURATION
+from serial_comm.simserial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
 
@@ -30,7 +30,10 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     recording_completed = pyqtSignal()
     valid_amplitudes = list(range(-10, 45, 5))
 
-    def __init__(self, process_path):
+    # Process paths for every mode
+    process_paths = {'sim': 'serial_comm/simserial.py', 'esp': 'serial_comm/desktop_serial.py'}
+
+    def __init__(self):
         # Initial setup
         super().__init__()
         self.setupUi(self)
@@ -73,7 +76,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         # Process communication setup
         self.process = QProcess(self)
-        self.process_path = process_path
+        self.process_path = CABRA_Window.process_paths['esp']
         self.start_process()
         self.pushRUN.clicked.connect(self.on_click_pushRUN)
         self.recording_completed.connect(self.handle_recording_completed)
@@ -100,6 +103,10 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         # Connect the CABRASweep button
         self.pushCABRASweep.clicked.connect(self.CABRASweep)
+
+        # Connect process selection actions
+        self.actionCABRA_Default.triggered.connect(lambda: self.change_process_path('esp'))
+        self.actionSimulator.triggered.connect(lambda: self.change_process_path('sim'))
 
         # Bind Ctrl + C to abort_test
         self.abort_shortcut = QShortcut(QKeySequence("Ctrl+C"), self)
@@ -137,6 +144,15 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
             self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
             self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o')
             self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x')
+
+    def change_process_path(self, mode):
+        """
+        Change the process path to the given mode
+        """
+        self.process_path = CABRA_Window.process_paths[mode]
+        self.restart_process()
+        self.labelStatus.setText(f"Mode changed to {mode}")
+
 
     ##################################################################################################
     # The following methods are related to the communication with the process and the GUI operation #
@@ -179,6 +195,15 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.process.readyReadStandardOutput.connect(self.handle_stdout)
         self.process.readyReadStandardError.connect(self.handle_stderr)
 
+    def restart_process(self):
+        """
+        Restart the process
+        """
+        self.process.kill()
+        self.process.waitForFinished()
+        self.start_process()
+        self.labelStatus.setText(f"Restarted connection for {self.process_path}")
+
     def _print_msg(self):
         """
         Just for debugging purposes
@@ -188,7 +213,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     @pyqtSlot()
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
-        print(data)
         if '.npy' in data:
             self.filepath = data.strip()
             self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
@@ -199,7 +223,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     @pyqtSlot()
     def handle_stderr(self):
         output = self.process.readAllStandardError().data().decode()
-        print(output)
         # Connection error: popout window for user to check connection
         if output == '1':
             self.labelStatus.setText("Connection error occurred.")
@@ -320,6 +343,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.plotWidget.plot(self.audiogram_left, pen='green', symbol='o', name='Left Ear')
         self.plotWidget.plot(self.audiogram_right, pen='blue', symbol='x', name='Right Ear')
         self.plotWidget.setXRange(0, len(self.audiogram_left) - 1, padding=0.05)
+        self.plotWidget.setYRange(-10, 40, padding=0.05)
+        self.plotWidget.invertY(True)
         self.plotWidget.setTitle(f"Audiogram for {self.nameEdit.text()}")
 
         # Axis setup
@@ -451,6 +476,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         # Continue the CABRASweep if necessary
         if self.in_CABRASweep:
             self.move_to_next_test()
+        else:
+            self.state = CABRA_Window.STATE_IDLE
 
     def move_to_next_test(self):
         """
@@ -517,7 +544,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         event.accept()
 
 
-class DialogReconnect(Ui_DialogReconnect, QMainWindow):
+class DialogReconnect(Ui_DialogReconnect, QDialog):
     def __init__(self, parent: CABRA_Window):
         self.parent = parent
         super().__init__()
@@ -525,9 +552,16 @@ class DialogReconnect(Ui_DialogReconnect, QMainWindow):
         self.buttonBox.accepted.connect(self.accept)
 
     def accept(self):
-        self.parent.process.kill()
-        self.parent.start_process()
+        self.parent.restart_process()
         self.close()
+
+    def reject(self):
+        self.parent.actionSimulator.trigger()
+        self.parent.restart_process()
+        self.close()
+
+    def ignore(self):
+        self.reject()
 
 
 class ToneBurstDialog(Ui_DialogToneBurst, QDialog):
@@ -549,7 +583,7 @@ class ToneBurstDialog(Ui_DialogToneBurst, QDialog):
 
 def run_ui():
     app = QApplication(sys.argv)
-    window = CABRA_Window(process_path='simserial.py')
+    window = CABRA_Window()
     window.show()
     app.exec()
 

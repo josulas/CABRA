@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>818</width>
+    <width>864</width>
     <height>639</height>
    </rect>
   </property>
@@ -298,7 +298,7 @@ font: Bold Italic 11pt &quot;Arial Bold&quot;;</string>
           </font>
          </property>
          <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 163, 72);
+          <string notr="true">background-color: rgb(246, 211, 45);
 color: rgb(0,0,0);
 font: 700 11pt &quot;Arial&quot;;</string>
          </property>
@@ -306,7 +306,7 @@ font: 700 11pt &quot;Arial&quot;;</string>
           <string>REC</string>
          </property>
          <property name="icon">
-          <iconset theme="QIcon::ThemeIcon::MultimediaPlayer"/>
+          <iconset theme="QIcon::ThemeIcon::AudioInputMicrophone"/>
          </property>
          <property name="iconSize">
           <size>
@@ -387,7 +387,7 @@ color:rgb(0,0,0);</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>818</width>
+     <width>864</width>
      <height>23</height>
     </rect>
    </property>
@@ -406,6 +406,8 @@ color:rgb(0,0,0);</string>
       <string>Mode...</string>
      </property>
      <addaction name="actionCABRA_Default"/>
+     <addaction name="actionSimulator"/>
+     <addaction name="actionGoated"/>
     </widget>
     <addaction name="actionTone_burst"/>
     <addaction name="menuMode"/>
@@ -432,6 +434,16 @@ color:rgb(0,0,0);</string>
   <action name="actionCABRA_Default">
    <property name="text">
     <string>CABRA [Default]</string>
+   </property>
+  </action>
+  <action name="actionSimulator">
+   <property name="text">
+    <string>Simulator</string>
+   </property>
+  </action>
+  <action name="actionGoated">
+   <property name="text">
+    <string>Goated</string>
    </property>
   </action>
  </widget>

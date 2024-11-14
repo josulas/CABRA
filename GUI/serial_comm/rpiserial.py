@@ -5,7 +5,7 @@ import numpy as np
 import scipy.signal as signal
 import RPi.GPIO as GPIO
 from average_eeg import average_EEG
-from playaudio import Clicker, EarSelect
+from .clicker import Clicker, EarSelect
 from datetime import datetime
 import sys
 import os
