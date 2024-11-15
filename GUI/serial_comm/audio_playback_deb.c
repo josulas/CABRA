@@ -47,10 +47,12 @@ void play_audio() {
 
     device = ao_open_live(default_driver, &format, NULL);
     if (device == NULL) {
-        fprintf(stderr, "Error opening device.\n");
+        fprintf(stderr, "E\n");
         return;
     }
 
+    printf("F\n");
+    fflush(stdout);
     ao_play(device, audio_data, audio_data_size);
     ao_close(device);
     ao_shutdown();
