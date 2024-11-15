@@ -1,13 +1,14 @@
 import sys
 import time
 import numpy as np
-from playaudio import EarSelect
+from GUI.serial_comm.clicker import EarSelect
 
 
 # Board parameters
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
-EVOKED_PATH = "evoked.npy"
-NOISE_PATH = "noise.npy"
+EVOKED_PATH = "saved_audiometries/evoked.npy"
+NOISE_PATH = "saved_audiometries/noise.npy"
+SAMPLINGRATE = 10_000
 
 
 class Actions:

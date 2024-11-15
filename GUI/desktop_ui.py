@@ -1,19 +1,23 @@
+# System level imports
 import sys
 import os
 from datetime import datetime
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
+# PySide6 imports
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QDialog
 from PySide6.QtCore import QProcess, Slot as pyqtSlot, Signal as pyqtSignal
 from PySide6.QtGui import QShortcut, QKeySequence
 from pyqtgraph.exporters import ImageExporter
+# Plotting related imports
 from pyqtgraph import mkPen
 import numpy as np
-from template_desktop import Ui_MainWindow
-from playaudio import EarSelect, CLICK_DURATION, CYCLE_DURATION
-from desktop_serial import Actions, SAMPLINGRATE
+# Local imports
+from ui_templates.dialog_reconnect import Ui_DialogReconnect
+from ui_templates.dialog_tone_burst import Ui_DialogToneBurst
+from ui_templates.template_desktop import Ui_MainWindow
+from serial_comm.clicker import EarSelect, CYCLE_DURATION
+from serial_comm.simserial import Actions, SAMPLINGRATE
 
-NCLICKS = 500
 OUTPUT_DIR = 'saved_audiometries'
-
 
 class CABRA_Window(Ui_MainWindow, QMainWindow):
     # Define states
@@ -26,7 +30,10 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     recording_completed = pyqtSignal()
     valid_amplitudes = list(range(-10, 45, 5))
 
-    def __init__(self, process_path):
+    # Process paths for every mode
+    process_paths = {'sim': 'serial_comm/simserial.py', 'esp': 'serial_comm/desktop_serial.py'}
+
+    def __init__(self):
         # Initial setup
         super().__init__()
         self.setupUi(self)
@@ -58,20 +65,18 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.id_mid = 2 # 0 [dbHL]
         self.dbamp = self.amplitudes[self.id_mid]
 
-        # Clicker init config
-        self.nclicks = NCLICKS
-        self.spinClickDuration.setValue(CLICK_DURATION)
-        self.spinCycleDuration.setValue(CYCLE_DURATION)
-
-        # Update maximum click duration based on cycle duration
-        self.spinCycleDuration.valueChanged.connect(self.change_max_click_duration)
+        # Inital clicker configuration
+        self.n_clicks = 500
+        self.click_duration = 10
+        self.cycle_duration = 30
+        self.actionTone_burst.triggered.connect(self.show_tone_burst_dialog)
 
         # Filepath to store the recording
         self.filepath = ''
 
         # Process communication setup
         self.process = QProcess(self)
-        self.process_path = process_path
+        self.process_path = CABRA_Window.process_paths['esp']
         self.start_process()
         self.pushRUN.clicked.connect(self.on_click_pushRUN)
         self.recording_completed.connect(self.handle_recording_completed)
@@ -99,9 +104,33 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         # Connect the CABRASweep button
         self.pushCABRASweep.clicked.connect(self.CABRASweep)
 
+        # Connect process selection actions
+        self.actionCABRA_Default.triggered.connect(lambda: self.change_process_path('esp'))
+        self.actionSimulator.triggered.connect(lambda: self.change_process_path('sim'))
+
         # Bind Ctrl + C to abort_test
         self.abort_shortcut = QShortcut(QKeySequence("Ctrl+C"), self)
         self.abort_shortcut.activated.connect(self.abort_test)
+
+    def show_tone_burst_dialog(self):
+        """
+        Pop up a dialog to set up tone burst specifications
+        """
+        dialog = ToneBurstDialog()
+        # Set the current values to the dialog
+        dialog.spinClickDuration.setValue(self.click_duration)
+        dialog.spinCycleDuration.setValue(self.cycle_duration)
+        dialog.spinNClicks.setValue(self.n_clicks)
+        dialog.accepted.connect(lambda: self.update_tone_burst_parameters(dialog))
+        dialog.exec()
+
+    def update_tone_burst_parameters(self, dialog):
+        """
+        Update the tone burst parameters based on the dialog
+        """
+        self.n_clicks = dialog.spinNClicks.value()
+        self.click_duration = dialog.spinClickDuration.value()
+        self.cycle_duration = dialog.spinCycleDuration.value()
 
     def checkbone_changed(self):
         """
@@ -116,12 +145,14 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
             self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o')
             self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x')
 
-    def change_max_click_duration(self):
+    def change_process_path(self, mode):
         """
-        Click duration must be smaller that cycle duration
-        Modify the minimum value of the click duration spinbox accordingly
+        Change the process path to the given mode
         """
-        self.spinClickDuration.setMaximum(self.spinCycleDuration.value())
+        self.process_path = CABRA_Window.process_paths[mode]
+        self.restart_process()
+        self.labelStatus.setText(f"Mode changed to {mode}")
+
 
     ##################################################################################################
     # The following methods are related to the communication with the process and the GUI operation #
@@ -143,9 +174,11 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         ear = self.get_ear_selection()
         freq_idx = self.comboBoxFreq.currentIndex()
         dbamp = self.dbamp
-        nclicks = self.nclicks
-        click_duration = self.spinClickDuration.value()
-        cycle_duration = self.spinCycleDuration.value()
+        nclicks = self.n_clicks
+        click_duration = self.click_duration
+        cycle_duration = self.cycle_duration
+        # click_duration = self.spinClickDuration.value()
+        # cycle_duration = self.spinCycleDuration.value()
         return f"{Actions.RECORD} {nclicks} {freq_idx} {ear} {dbamp} {click_duration} {cycle_duration} \n"
 
     def start_process(self):
@@ -162,6 +195,15 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.process.readyReadStandardOutput.connect(self.handle_stdout)
         self.process.readyReadStandardError.connect(self.handle_stderr)
 
+    def restart_process(self):
+        """
+        Restart the process
+        """
+        self.process.kill()
+        self.process.waitForFinished()
+        self.start_process()
+        self.labelStatus.setText(f"Restarted connection for {self.process_path}")
+
     def _print_msg(self):
         """
         Just for debugging purposes
@@ -171,26 +213,20 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     @pyqtSlot()
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
-        print(data)
         if '.npy' in data:
             self.filepath = data.strip()
             self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
             self.recording_completed.emit()
         else:
-            self.handle_stderr
+            self.handle_stderr()
 
     @pyqtSlot()
     def handle_stderr(self):
         output = self.process.readAllStandardError().data().decode()
-        print(output)
         # Connection error: popout window for user to check connection
         if output == '1':
             self.labelStatus.setText("Connection error occurred.")
-            msg_box = QMessageBox()
-            msg_box.setText("Connection error occurred.")
-            msg_box.setInformativeText("Please check the connection and try again.")
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.buttonClicked.connect(self.start_process)
+            msg_box = DialogReconnect(self)
             msg_box.exec()
 
         elif output == '2':
@@ -227,6 +263,10 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
     # Abort the current test and reset the state to idle using Ctrl + C
     def abort_test(self):
+        """
+        Abort the current test and reset the state to idle
+        Also restart process
+        """
         self.process.kill()
         self.start_process()
         self.labelStatus.setText("Test aborted.")
@@ -237,7 +277,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.pushNOISE.setEnabled(False)
         self.reset_dbamp()
         self.plot_null()
-
 
     def audiogram_is_ready(self):
         """
@@ -304,6 +343,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.plotWidget.plot(self.audiogram_left, pen='green', symbol='o', name='Left Ear')
         self.plotWidget.plot(self.audiogram_right, pen='blue', symbol='x', name='Right Ear')
         self.plotWidget.setXRange(0, len(self.audiogram_left) - 1, padding=0.05)
+        self.plotWidget.setYRange(-10, 40, padding=0.05)
+        self.plotWidget.invertY(True)
         self.plotWidget.setTitle(f"Audiogram for {self.nameEdit.text()}")
 
         # Axis setup
@@ -435,6 +476,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         # Continue the CABRASweep if necessary
         if self.in_CABRASweep:
             self.move_to_next_test()
+        else:
+            self.state = CABRA_Window.STATE_IDLE
 
     def move_to_next_test(self):
         """
@@ -468,9 +511,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         else:
             self.state = CABRA_Window.STATE_IDLE
             self.labelStatus.setText("CABRASweep completed.")
-            for widget in [self.pushCABRASweep, self.pushRUN, self.spinClickDuration,
-                           self.spinCycleDuration, self.checkBone, self.nameEdit,
-                           self.dateEdit, self.lineID]:
+            for widget in [self.pushCABRASweep, self.pushRUN, self.nameEdit, self.dateEdit, self.lineID]:
                 widget.setEnabled(True)
             self.in_CABRASweep = False
 
@@ -486,9 +527,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.in_CABRASweep = True
 
         # Disable all widgets that shouldn't be touched
-        for widget in [self.pushCABRASweep, self.pushRUN, self.spinClickDuration,
-                       self.spinCycleDuration, self.checkBone, self.nameEdit,
-                       self.dateEdit, self.lineID]:
+        for widget in [self.pushCABRASweep, self.pushRUN, self.nameEdit, self.dateEdit, self.lineID]:
             widget.setEnabled(False)
 
         # Initialize the test
@@ -505,9 +544,46 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         event.accept()
 
 
+class DialogReconnect(Ui_DialogReconnect, QDialog):
+    def __init__(self, parent: CABRA_Window):
+        self.parent = parent
+        super().__init__()
+        self.setupUi(self)
+        self.buttonBox.accepted.connect(self.accept)
+
+    def accept(self):
+        self.parent.restart_process()
+        self.close()
+
+    def reject(self):
+        self.parent.actionSimulator.trigger()
+        self.parent.restart_process()
+        self.close()
+
+    def ignore(self):
+        self.reject()
+
+
+class ToneBurstDialog(Ui_DialogToneBurst, QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+
+        # Update maximum click duration based on cycle duration
+        self.spinCycleDuration.valueChanged.connect(self.change_max_click_duration)
+        self.change_max_click_duration()
+
+    def change_max_click_duration(self):
+        """
+        Click duration must be smaller that cycle duration
+        Modify the minimum value of the click duration spinbox accordingly
+        """
+        self.spinClickDuration.setMaximum(self.spinCycleDuration.value())
+
+
 def run_ui():
     app = QApplication(sys.argv)
-    window = CABRA_Window(process_path='desktop_serial.py')
+    window = CABRA_Window()
     window.show()
     app.exec()
 

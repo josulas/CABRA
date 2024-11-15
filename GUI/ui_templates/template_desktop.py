@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'template.ui'
+## Form generated from reading UI file 'template_desktop.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.0
 ##
@@ -19,7 +19,7 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateEdit,
     QFormLayout, QFrame, QHBoxLayout, QLabel,
     QLineEdit, QMainWindow, QMenu, QMenuBar,
-    QPushButton, QRadioButton, QSizePolicy, QSpinBox,
+    QPushButton, QRadioButton, QSizePolicy, QSpacerItem,
     QStatusBar, QVBoxLayout, QWidget)
 
 from pyqtgraph import PlotWidget
@@ -28,11 +28,19 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(818, 639)
+        MainWindow.resize(864, 639)
         self.actionSave = QAction(MainWindow)
         self.actionSave.setObjectName(u"actionSave")
         self.actionNumber_of_clicks = QAction(MainWindow)
         self.actionNumber_of_clicks.setObjectName(u"actionNumber_of_clicks")
+        self.actionTone_burst = QAction(MainWindow)
+        self.actionTone_burst.setObjectName(u"actionTone_burst")
+        self.actionCABRA_Default = QAction(MainWindow)
+        self.actionCABRA_Default.setObjectName(u"actionCABRA_Default")
+        self.actionSimulator = QAction(MainWindow)
+        self.actionSimulator.setObjectName(u"actionSimulator")
+        self.actionGoated = QAction(MainWindow)
+        self.actionGoated.setObjectName(u"actionGoated")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -79,17 +87,17 @@ class Ui_MainWindow(object):
 
         self.formPatientData.setWidget(1, QFormLayout.LabelRole, self.labelDOB)
 
-        self.labelID = QLabel(self.frameControl)
-        self.labelID.setObjectName(u"labelID")
-
-        self.formPatientData.setWidget(2, QFormLayout.LabelRole, self.labelID)
-
         self.dateEdit = QDateEdit(self.frameControl)
         self.dateEdit.setObjectName(u"dateEdit")
         sizePolicy1.setHeightForWidth(self.dateEdit.sizePolicy().hasHeightForWidth())
         self.dateEdit.setSizePolicy(sizePolicy1)
 
         self.formPatientData.setWidget(1, QFormLayout.FieldRole, self.dateEdit)
+
+        self.labelID = QLabel(self.frameControl)
+        self.labelID.setObjectName(u"labelID")
+
+        self.formPatientData.setWidget(2, QFormLayout.LabelRole, self.labelID)
 
         self.lineID = QLineEdit(self.frameControl)
         self.lineID.setObjectName(u"lineID")
@@ -102,49 +110,19 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addLayout(self.formPatientData)
 
-        self.VLayoutEAR = QVBoxLayout()
-        self.VLayoutEAR.setObjectName(u"VLayoutEAR")
-        self.VLayoutEAR.setContentsMargins(20, -1, 20, -1)
-        self.HLayoutEar = QHBoxLayout()
-        self.HLayoutEar.setObjectName(u"HLayoutEar")
-        self.radioLeftEAR = QRadioButton(self.frameControl)
-        self.radioLeftEAR.setObjectName(u"radioLeftEAR")
-        self.radioLeftEAR.setChecked(True)
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.HLayoutEar.addWidget(self.radioLeftEAR)
+        self.horizontalLayout.addItem(self.verticalSpacer_2)
 
-        self.radioRightEAR = QRadioButton(self.frameControl)
-        self.radioRightEAR.setObjectName(u"radioRightEAR")
-
-        self.HLayoutEar.addWidget(self.radioRightEAR)
-
-
-        self.VLayoutEAR.addLayout(self.HLayoutEar)
-
-        self.checkBone = QCheckBox(self.frameControl)
-        self.checkBone.setObjectName(u"checkBone")
-
-        self.VLayoutEAR.addWidget(self.checkBone)
-
-        self.pushCABRASweep = QPushButton(self.frameControl)
-        self.pushCABRASweep.setObjectName(u"pushCABRASweep")
-        self.pushCABRASweep.setStyleSheet(u"background-color: rgb(230, 97, 0);\n"
-"color: rgb(0, 0, 0);\n"
-"font: italic 10pt \"Arial Black\";")
-        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ZoomFitBest))
-        self.pushCABRASweep.setIcon(icon)
-
-        self.VLayoutEAR.addWidget(self.pushCABRASweep)
-
-
-        self.horizontalLayout.addLayout(self.VLayoutEAR)
-
-        self.formCLick = QFormLayout()
-        self.formCLick.setObjectName(u"formCLick")
+        self.verticalLayout_3 = QVBoxLayout()
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(-1, -1, 0, -1)
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.labelFreq = QLabel(self.frameControl)
         self.labelFreq.setObjectName(u"labelFreq")
 
-        self.formCLick.setWidget(0, QFormLayout.LabelRole, self.labelFreq)
+        self.horizontalLayout_3.addWidget(self.labelFreq)
 
         self.comboBoxFreq = QComboBox(self.frameControl)
         self.comboBoxFreq.addItem("")
@@ -157,31 +135,67 @@ class Ui_MainWindow(object):
         sizePolicy1.setHeightForWidth(self.comboBoxFreq.sizePolicy().hasHeightForWidth())
         self.comboBoxFreq.setSizePolicy(sizePolicy1)
 
-        self.formCLick.setWidget(0, QFormLayout.FieldRole, self.comboBoxFreq)
-
-        self.labelClickDuration = QLabel(self.frameControl)
-        self.labelClickDuration.setObjectName(u"labelClickDuration")
-
-        self.formCLick.setWidget(1, QFormLayout.LabelRole, self.labelClickDuration)
-
-        self.spinClickDuration = QSpinBox(self.frameControl)
-        self.spinClickDuration.setObjectName(u"spinClickDuration")
-
-        self.formCLick.setWidget(1, QFormLayout.FieldRole, self.spinClickDuration)
-
-        self.labelCycleDuration = QLabel(self.frameControl)
-        self.labelCycleDuration.setObjectName(u"labelCycleDuration")
-
-        self.formCLick.setWidget(2, QFormLayout.LabelRole, self.labelCycleDuration)
-
-        self.spinCycleDuration = QSpinBox(self.frameControl)
-        self.spinCycleDuration.setObjectName(u"spinCycleDuration")
-        self.spinCycleDuration.setStyleSheet(u"border-color: rgb(0, 0, 0);")
-
-        self.formCLick.setWidget(2, QFormLayout.FieldRole, self.spinCycleDuration)
+        self.horizontalLayout_3.addWidget(self.comboBoxFreq)
 
 
-        self.horizontalLayout.addLayout(self.formCLick)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_3)
+
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.radioLeftEAR = QRadioButton(self.frameControl)
+        self.radioLeftEAR.setObjectName(u"radioLeftEAR")
+        self.radioLeftEAR.setChecked(True)
+
+        self.horizontalLayout_2.addWidget(self.radioLeftEAR)
+
+        self.radioRightEAR = QRadioButton(self.frameControl)
+        self.radioRightEAR.setObjectName(u"radioRightEAR")
+
+        self.horizontalLayout_2.addWidget(self.radioRightEAR)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_2)
+
+
+        self.horizontalLayout.addLayout(self.verticalLayout_3)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.horizontalLayout.addItem(self.verticalSpacer)
+
+        self.verticalLayout_2 = QVBoxLayout()
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(15, -1, 15, -1)
+        self.checkBone = QCheckBox(self.frameControl)
+        self.checkBone.setObjectName(u"checkBone")
+
+        self.verticalLayout_2.addWidget(self.checkBone)
+
+        self.pushCABRASweep = QPushButton(self.frameControl)
+        self.pushCABRASweep.setObjectName(u"pushCABRASweep")
+        sizePolicy1.setHeightForWidth(self.pushCABRASweep.sizePolicy().hasHeightForWidth())
+        self.pushCABRASweep.setSizePolicy(sizePolicy1)
+        self.pushCABRASweep.setMinimumSize(QSize(0, 20))
+        font = QFont()
+        font.setFamilies([u"Arial Bold"])
+        font.setPointSize(11)
+        font.setBold(True)
+        font.setItalic(True)
+        font.setUnderline(False)
+        font.setStrikeOut(False)
+        self.pushCABRASweep.setFont(font)
+        self.pushCABRASweep.setAutoFillBackground(False)
+        self.pushCABRASweep.setStyleSheet(u"background-color: rgb(230, 97, 0);\n"
+"color: rgb(0, 0, 0);\n"
+"font: Bold Italic 11pt \"Arial Bold\";")
+        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ZoomFitBest))
+        self.pushCABRASweep.setIcon(icon)
+        self.pushCABRASweep.setIconSize(QSize(20, 20))
+
+        self.verticalLayout_2.addWidget(self.pushCABRASweep)
+
+
+        self.horizontalLayout.addLayout(self.verticalLayout_2)
 
         self.pushRUN = QPushButton(self.frameControl)
         self.pushRUN.setObjectName(u"pushRUN")
@@ -191,15 +205,17 @@ class Ui_MainWindow(object):
         sizePolicy2.setHeightForWidth(self.pushRUN.sizePolicy().hasHeightForWidth())
         self.pushRUN.setSizePolicy(sizePolicy2)
         self.pushRUN.setMinimumSize(QSize(80, 0))
-        font = QFont()
-        font.setFamilies([u"Arial"])
-        font.setPointSize(9)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setKerning(True)
-        self.pushRUN.setFont(font)
-        self.pushRUN.setStyleSheet(u"background-color: rgb(91, 83, 83);")
-        icon1 = QIcon(QIcon.fromTheme(u"media-playback-start"))
+        font1 = QFont()
+        font1.setFamilies([u"Arial"])
+        font1.setPointSize(11)
+        font1.setBold(True)
+        font1.setItalic(False)
+        font1.setKerning(True)
+        self.pushRUN.setFont(font1)
+        self.pushRUN.setStyleSheet(u"background-color: rgb(246, 211, 45);\n"
+"color: rgb(0,0,0);\n"
+"font: 700 11pt \"Arial\";")
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioInputMicrophone))
         self.pushRUN.setIcon(icon1)
         self.pushRUN.setIconSize(QSize(20, 20))
 
@@ -254,13 +270,13 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 818, 23))
+        self.menubar.setGeometry(QRect(0, 0, 864, 23))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuOption = QMenu(self.menubar)
         self.menuOption.setObjectName(u"menuOption")
-        self.menuSet = QMenu(self.menuOption)
-        self.menuSet.setObjectName(u"menuSet")
+        self.menuMode = QMenu(self.menuOption)
+        self.menuMode.setObjectName(u"menuMode")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -269,8 +285,11 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuOption.menuAction())
         self.menuFile.addAction(self.actionSave)
-        self.menuOption.addAction(self.menuSet.menuAction())
-        self.menuSet.addAction(self.actionNumber_of_clicks)
+        self.menuOption.addAction(self.actionTone_burst)
+        self.menuOption.addAction(self.menuMode.menuAction())
+        self.menuMode.addAction(self.actionCABRA_Default)
+        self.menuMode.addAction(self.actionSimulator)
+        self.menuMode.addAction(self.actionGoated)
 
         self.retranslateUi(MainWindow)
 
@@ -281,13 +300,13 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"CABRA", None))
         self.actionSave.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.actionNumber_of_clicks.setText(QCoreApplication.translate("MainWindow", u"Number of clicks", None))
+        self.actionTone_burst.setText(QCoreApplication.translate("MainWindow", u"Tone burst setup", None))
+        self.actionCABRA_Default.setText(QCoreApplication.translate("MainWindow", u"CABRA [Default]", None))
+        self.actionSimulator.setText(QCoreApplication.translate("MainWindow", u"Simulator", None))
+        self.actionGoated.setText(QCoreApplication.translate("MainWindow", u"Goated", None))
         self.labelName.setText(QCoreApplication.translate("MainWindow", u"Name:", None))
         self.labelDOB.setText(QCoreApplication.translate("MainWindow", u"DOB:", None))
         self.labelID.setText(QCoreApplication.translate("MainWindow", u"ID:", None))
-        self.radioLeftEAR.setText(QCoreApplication.translate("MainWindow", u"Left ear", None))
-        self.radioRightEAR.setText(QCoreApplication.translate("MainWindow", u"Right ear", None))
-        self.checkBone.setText(QCoreApplication.translate("MainWindow", u"Bone conduction headset", None))
-        self.pushCABRASweep.setText(QCoreApplication.translate("MainWindow", u"CABRA Sweep", None))
         self.labelFreq.setText(QCoreApplication.translate("MainWindow", u"Frequency [Hz]:", None))
         self.comboBoxFreq.setItemText(0, QCoreApplication.translate("MainWindow", u"250", None))
         self.comboBoxFreq.setItemText(1, QCoreApplication.translate("MainWindow", u"500", None))
@@ -296,16 +315,16 @@ class Ui_MainWindow(object):
         self.comboBoxFreq.setItemText(4, QCoreApplication.translate("MainWindow", u"4000", None))
         self.comboBoxFreq.setItemText(5, QCoreApplication.translate("MainWindow", u"8000", None))
 
-        self.labelClickDuration.setText(QCoreApplication.translate("MainWindow", u"Click duration:", None))
-        self.spinClickDuration.setSuffix(QCoreApplication.translate("MainWindow", u" [ms]", None))
-        self.labelCycleDuration.setText(QCoreApplication.translate("MainWindow", u"Cycle duration:", None))
-        self.spinCycleDuration.setSuffix(QCoreApplication.translate("MainWindow", u" [ms]", None))
-        self.pushRUN.setText(QCoreApplication.translate("MainWindow", u"RUN", None))
+        self.radioLeftEAR.setText(QCoreApplication.translate("MainWindow", u"Left ear", None))
+        self.radioRightEAR.setText(QCoreApplication.translate("MainWindow", u"Right ear", None))
+        self.checkBone.setText(QCoreApplication.translate("MainWindow", u"Bone conduction", None))
+        self.pushCABRASweep.setText(QCoreApplication.translate("MainWindow", u" CABRA Sweep", None))
+        self.pushRUN.setText(QCoreApplication.translate("MainWindow", u"REC", None))
         self.pushEVOKED.setText(QCoreApplication.translate("MainWindow", u"Evoked", None))
         self.pushNOISE.setText(QCoreApplication.translate("MainWindow", u"Noise", None))
         self.labelStatus.setText(QCoreApplication.translate("MainWindow", u"Set the parameters for the experiment, and hit RUN", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuOption.setTitle(QCoreApplication.translate("MainWindow", u"Options", None))
-        self.menuSet.setTitle(QCoreApplication.translate("MainWindow", u"Set...", None))
+        self.menuMode.setTitle(QCoreApplication.translate("MainWindow", u"Mode...", None))
     # retranslateUi
 
