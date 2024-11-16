@@ -1,2 +1,1 @@
-import GUI.ui_templates
-import GUI.serial_comm
+from GUI import clicker

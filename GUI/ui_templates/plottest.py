@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         self.widget.showGrid(x=True, y=True, alpha=0.3)
         
 def main():
-    data = np.load('../saved_audiometries/evoked.npy')
+    data = np.load('../saved_data/evoked.npy')
     print(data.shape)
     app = QApplication(sys.argv)
     window = MainWindow(data)

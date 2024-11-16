@@ -8,7 +8,7 @@ import serial.tools.list_ports
 import numpy as np
 import scipy.signal as signal
 from average_eeg import average_EEG
-from GUI.serial_comm.clicker import Clicker, EarSelect
+from clicker import Clicker, EarSelect
 
 
 # Board parameters
@@ -35,8 +35,8 @@ SERIAL_RECOGNIZER = "Bluetooth"
 
 # Player parameters
 # Path to the C executable
-PLAYER_PATH_WINDOWS = "serial_comm/audio_playback.exe"
-PLAYER_PATH_LINUX = "serial_comm/audio_playback_linux"
+PLAYER_PATH_WINDOWS = "audio_playback.exe"
+PLAYER_PATH_LINUX = "./audio_playback_linux"
 TEMP_FILE = "~.wav"
 
 

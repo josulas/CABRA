@@ -14,8 +14,8 @@ import numpy as np
 from ui_templates.dialog_reconnect import Ui_DialogReconnect
 from ui_templates.dialog_tone_burst import Ui_DialogToneBurst
 from ui_templates.template_desktop import Ui_MainWindow
-from serial_comm.clicker import EarSelect, CYCLE_DURATION
-from serial_comm.simserial import Actions, SAMPLINGRATE
+from clicker import EarSelect, CYCLE_DURATION
+from desktop_serial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
 
@@ -31,7 +31,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     valid_amplitudes = list(range(-10, 45, 5))
 
     # Process paths for every mode
-    process_paths = {'sim': 'serial_comm/simserial.py', 'esp': 'serial_comm/desktop_serial.py'}
+    process_paths = {'sim': 'simserial.py', 'esp': 'desktop_serial.py'}
 
     def __init__(self):
         # Initial setup
@@ -199,6 +199,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         Restart the process
         """
+        self.process.write(f"{Actions.EXIT}\n".encode())
         self.process.kill()
         self.process.waitForFinished()
         self.start_process()

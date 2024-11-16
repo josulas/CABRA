@@ -5,7 +5,7 @@ import numpy as np
 import scipy.signal as signal
 import RPi.GPIO as GPIO
 from average_eeg import average_EEG
-from .clicker import Clicker, EarSelect
+from clicker import Clicker, EarSelect
 from datetime import datetime
 import sys
 import os
@@ -28,7 +28,7 @@ GAIN = 30000 / 4 # SIGNALRANGE / EEGRANGE
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 INTERRUPTION_PIN = 11
 RESET_ESP_PIN = 12
-OUTPUT_DIR = 'saved_data'
+OUTPUT_DIR = ''
 SERIAL_RECOGNIZER = "USB to UART Bridge Controller"
 
 
