@@ -3,9 +3,9 @@ import sys
 import os
 from datetime import datetime
 # PySide6 imports
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QDialog, QStyle, QDialogButtonBox
 from PySide6.QtCore import QProcess, Slot as pyqtSlot, Signal as pyqtSignal
-from PySide6.QtGui import QShortcut, QKeySequence
+from PySide6.QtGui import QShortcut, QKeySequence, QIcon
 from pyqtgraph.exporters import ImageExporter
 # Plotting related imports
 from pyqtgraph import mkPen
@@ -19,6 +19,7 @@ from desktop_serial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
 
+
 class CABRA_Window(Ui_MainWindow, QMainWindow):
     # Define states
     STATE_IDLE = 0
@@ -31,7 +32,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     valid_amplitudes = list(range(-10, 45, 5))
 
     # Process paths for every mode
-    process_paths = {'sim': 'simserial.py', 'esp': 'desktop_serial.py'}
+    process_paths = {'simulation': 'simserial.py', 'CABRA device': 'desktop_serial.py'}
+    process_names = {'simserial.py': 'Simulation', 'desktop_serial.py': 'CABRA Device'}
 
     def __init__(self):
         # Initial setup
@@ -62,7 +64,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.amplitudes = CABRA_Window.valid_amplitudes
         self.id_min = 0
         self.id_max = len(self.amplitudes) - 1
-        self.id_mid = 2 # 0 [dbHL]
+        self.id_mid = 2  # 0 [dbHL]
         self.dbamp = self.amplitudes[self.id_mid]
 
         # Inital clicker configuration
@@ -76,7 +78,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         # Process communication setup
         self.process = QProcess(self)
-        self.process_path = CABRA_Window.process_paths['esp']
+        self.process_path = CABRA_Window.process_paths['CABRA device']
         self.start_process()
         self.pushRUN.clicked.connect(self.on_click_pushRUN)
         self.recording_completed.connect(self.handle_recording_completed)
@@ -103,10 +105,15 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         # Connect the CABRASweep button
         self.pushCABRASweep.clicked.connect(self.CABRASweep)
+        self.pushCABRA_default_color = '''{background-color: rgb(230, 97, 0); 
+                                          color: rgb(0, 0, 0); 
+                                          font: Bold Italic 11pt "Arial Bold"; }'''
+        self.pushCABRASweep.setStyleSheet("QPushButton:disabled { background-color: gray; }" + \
+                                          f"QPushButton {self.pushCABRA_default_color}")
 
         # Connect process selection actions
-        self.actionCABRA_Default.triggered.connect(lambda: self.change_process_path('esp'))
-        self.actionSimulator.triggered.connect(lambda: self.change_process_path('sim'))
+        self.actionCABRA_Default.triggered.connect(lambda: self.change_process_path('CABRA device'))
+        self.actionSimulator.triggered.connect(lambda: self.change_process_path('simulation'))
 
         # Bind Ctrl + C to abort_test
         self.abort_shortcut = QShortcut(QKeySequence("Ctrl+C"), self)
@@ -153,6 +160,29 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.restart_process()
         self.labelStatus.setText(f"Mode changed to {mode}")
 
+    def update_run_button_to_stop(self):
+        """
+        Update the RUN button to act as a STOP button during recording.
+        """
+        self.pushRUN.setText("STOP")
+        self.pushRUN.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStop))
+        self.pushRUN.clicked.disconnect()
+        self.pushRUN.clicked.connect(self.abort_test)
+        self.pushRUN.setStyleSheet(u"background-color: rgb(171, 143, 202);\n"
+                                   "color: rgb(0,0,0);\n"
+                                   "font: 700 11pt \"Arial\";")
+
+    def reset_stop_button_to_run(self):
+        """
+        Reset the RUN button to its original state.
+        """
+        self.pushRUN.setText("REC")
+        self.pushRUN.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioInputMicrophone))
+        self.pushRUN.clicked.disconnect()
+        self.pushRUN.clicked.connect(self.on_click_pushRUN)
+        self.pushRUN.setStyleSheet(u"background-color: rgb(246, 211, 45);\n"
+                                   "color: rgb(0,0,0);\n"
+                                   "font: 700 11pt \"Arial\";")
 
     ##################################################################################################
     # The following methods are related to the communication with the process and the GUI operation #
@@ -203,7 +233,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.process.kill()
         self.process.waitForFinished()
         self.start_process()
-        self.labelStatus.setText(f"Restarted connection for {self.process_path}")
+        self.labelStatus.setText(f"Restarted connection for {CABRA_Window.process_names[self.process_path]}")
 
     def _print_msg(self):
         """
@@ -268,12 +298,13 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         Abort the current test and reset the state to idle
         Also restart process
         """
-        self.process.kill()
-        self.start_process()
         self.labelStatus.setText("Test aborted.")
+        self.process.kill()
+        self.process.waitForFinished()
+        self.start_process()
         self.state = CABRA_Window.STATE_IDLE
         self.pushCABRASweep.setEnabled(True)
-        self.pushRUN.setEnabled(True)
+        self.reset_stop_button_to_run()
         self.pushEVOKED.setEnabled(False)
         self.pushNOISE.setEnabled(False)
         self.reset_dbamp()
@@ -427,7 +458,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         if self.state == CABRA_Window.STATE_RUNNING:
             # Record ABR for the current amplitude
-            self.pushRUN.setEnabled(False)
+            self.update_run_button_to_stop()
             self.start_recording()
             self.state = CABRA_Window.STATE_WAITING_FOR_USER
 
@@ -450,7 +481,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         # Disable the evoked/noise buttons
         self.pushEVOKED.setEnabled(False)
         self.pushNOISE.setEnabled(False)
-        self.pushRUN.setEnabled(True)
 
         # Update the status label and the audiogram
         frequency = self.comboBoxFreq.currentText()
@@ -478,6 +508,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         if self.in_CABRASweep:
             self.move_to_next_test()
         else:
+            self.reset_stop_button_to_run()
             self.state = CABRA_Window.STATE_IDLE
 
     def move_to_next_test(self):
@@ -512,7 +543,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         else:
             self.state = CABRA_Window.STATE_IDLE
             self.labelStatus.setText("CABRASweep completed.")
-            for widget in [self.pushCABRASweep, self.pushRUN, self.nameEdit, self.dateEdit, self.lineID]:
+            for widget in [self.pushCABRASweep, self.nameEdit, self.dateEdit, self.lineID]:
                 widget.setEnabled(True)
             self.in_CABRASweep = False
 
@@ -528,7 +559,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.in_CABRASweep = True
 
         # Disable all widgets that shouldn't be touched
-        for widget in [self.pushCABRASweep, self.pushRUN, self.nameEdit, self.dateEdit, self.lineID]:
+        for widget in [self.pushCABRASweep, self.nameEdit, self.dateEdit, self.lineID]:
             widget.setEnabled(False)
 
         # Initialize the test
@@ -550,19 +581,17 @@ class DialogReconnect(Ui_DialogReconnect, QDialog):
         self.parent = parent
         super().__init__()
         self.setupUi(self)
-        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.accepted.connect(self.on_accept)
+        self.buttonBox.rejected.connect(self.on_reject)
 
-    def accept(self):
+    def on_accept(self):
         self.parent.restart_process()
         self.close()
 
-    def reject(self):
+    def on_reject(self):
         self.parent.actionSimulator.trigger()
         self.parent.restart_process()
         self.close()
-
-    def ignore(self):
-        self.reject()
 
 
 class ToneBurstDialog(Ui_DialogToneBurst, QDialog):

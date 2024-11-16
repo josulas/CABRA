@@ -33,7 +33,7 @@ class Ui_DialogReconnect(object):
         self.buttonBox.setObjectName(u"buttonBox")
         self.buttonBox.setGeometry(QRect(20, 70, 171, 26))
         self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Ignore|QDialogButtonBox.StandardButton.Ok)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
 
         self.retranslateUi(DialogReconnect)
         self.buttonBox.accepted.connect(DialogReconnect.accept)
