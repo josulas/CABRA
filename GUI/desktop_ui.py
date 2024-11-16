@@ -33,7 +33,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
     # Process paths for every mode
     process_paths = {'simulation': 'simserial.py', 'CABRA device': 'desktop_serial.py'}
-    process_names = {'simserial.py': 'Simulation', 'desktop_serial.py': 'CABRA Device'}
 
     def __init__(self):
         # Initial setup
@@ -45,9 +44,9 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.in_CABRASweep = False
 
         # Pens
-        self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
-        self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o')
-        self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x')
+        self.evoked_pen = mkPen(color=(255, 0, 0), width=2, symbolBrush=(255, 0, 0), symbolSize=10)
+        self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o', symbolBrush=(230, 97, 0), symbolSize=10)
+        self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x', symbolBrush=(0, 0, 255), symbolSize=10)
 
         # Checkbone also modifies the pen, so we might as well set it up right now
         self.checkBone.stateChanged.connect(self.checkbone_changed)
@@ -64,7 +63,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.amplitudes = CABRA_Window.valid_amplitudes
         self.id_min = 0
         self.id_max = len(self.amplitudes) - 1
-        self.id_mid = 2  # 0 [dbHL]
+        self.id_mid = self.amplitudes.index(0)  # 0 [dbHL]
         self.dbamp = self.amplitudes[self.id_mid]
 
         # Inital clicker configuration
@@ -145,12 +144,12 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         if self.checkBone.isChecked():
             self.evoked_pen = mkPen(color=(0, 255, 0), width=2)
-            self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='.')
-            self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='.')
+            self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='.', symbolPen=(230, 97, 0))
+            self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='.', symbolPen=(0, 0, 255))
         else:
             self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
-            self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o')
-            self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x')
+            self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o', symbolPen=(230, 97, 0))
+            self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x', symbolPen=(0, 0, 255))
 
     def change_process_path(self, mode):
         """
@@ -159,6 +158,12 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.process_path = CABRA_Window.process_paths[mode]
         self.restart_process()
         self.labelStatus.setText(f"Mode changed to {mode}")
+        if mode == 'simulation':
+            self.actionSimulator.setChecked(True)
+            self.actionCABRA_Default.setChecked(False)
+            self.n_clicks = 50
+            self.click_duration = 5
+            self.cycle_duration = 10
 
     def update_run_button_to_stop(self):
         """
@@ -233,7 +238,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.process.kill()
         self.process.waitForFinished()
         self.start_process()
-        self.labelStatus.setText(f"Restarted connection for {CABRA_Window.process_names[self.process_path]}")
+        self.labelStatus.setText(f"Restarted connection for {self.process_path}")
 
     def _print_msg(self):
         """
@@ -350,8 +355,13 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         Plot a null graph
         """
+        # Reset the plotWidget by removing legends, ticks, axis labels, and all
+        self.plotWidget.plotItem.getAxis('bottom').setLabel('')
+        self.plotWidget.plotItem.getAxis('left').setLabel('')
         self.plotWidget.clear()
+
         self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen=self.evoked_pen)
+        self.plotWidget.plotItem.autoRange()
         self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
         self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
 
@@ -372,10 +382,12 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         # Plotting
         self.plotWidget.clear()
+        # Add legend at the bottom right
+        self.plotWidget.plotItem.addLegend(offset=(-30, 30))
         self.plotWidget.plot(self.audiogram_left, pen='green', symbol='o', name='Left Ear')
         self.plotWidget.plot(self.audiogram_right, pen='blue', symbol='x', name='Right Ear')
         self.plotWidget.setXRange(0, len(self.audiogram_left) - 1, padding=0.05)
-        self.plotWidget.setYRange(-10, 40, padding=0.05)
+        self.plotWidget.setYRange(-10, 100, padding=0.05)
         self.plotWidget.invertY(True)
         self.plotWidget.setTitle(f"Audiogram for {self.nameEdit.text()}")
 
@@ -384,6 +396,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         ax.setTicks([[(i, str(self.comboBoxFreq.itemText(i))) for i in range(len(self.audiogram_left))]])
         ax.setLabel('Frequency [Hz]')
         ay = self.plotWidget.getAxis('left')
+        ax.setTicks([[(i, str(self.amplitudes[i])) for i in range(len(self.amplitudes))]])
         ay.setLabel('Amplitude [dB HL]')
         self.plotWidget.addLegend()
 
@@ -400,7 +413,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         self.id_min = 0
         self.id_max = len(self.amplitudes) - 1
-        self.id_mid = 2  # 0 [dbHL] is at position 1, always
+        self.id_mid = self.amplitudes.index(0)
         self.dbamp = self.amplitudes[self.id_mid]
 
     def update_mid_dbapm(self):
@@ -572,7 +585,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         Kill the process when the window is closed
         """
-        self.process.kill()
+        self.process.write(f"{Actions.EXIT}\n".encode())
         event.accept()
 
 
