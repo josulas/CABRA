@@ -2,7 +2,7 @@
 #include <BluetoothSerial.h>
 
 // defines
-#define SAMPLERATE 5000 // Hz
+#define SAMPLERATE 8000 // Hz
 #define NSAMPLESPERBUFFER 256
 #define SERIALBAUD 500000
 #define READPIN 4
