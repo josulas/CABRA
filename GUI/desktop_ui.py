@@ -6,6 +6,7 @@ from datetime import datetime
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QDialog, QStyle, QDialogButtonBox
 from PySide6.QtCore import QProcess, Slot as pyqtSlot, Signal as pyqtSignal
 from PySide6.QtGui import QShortcut, QKeySequence, QIcon
+from PySide6 import QtGui, QtCore
 from pyqtgraph.exporters import ImageExporter
 # Plotting related imports
 from pyqtgraph import mkPen
@@ -14,7 +15,7 @@ import numpy as np
 from ui_templates.dialog_reconnect import Ui_DialogReconnect
 from ui_templates.dialog_tone_burst import Ui_DialogToneBurst
 from ui_templates.template_desktop import Ui_MainWindow
-from clicker import EarSelect, CYCLE_DURATION
+from clicker import EarSelect
 from desktop_serial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
@@ -43,20 +44,30 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.current_ear = EarSelect.LEFT
         self.in_CABRASweep = False
 
+        # Inital clicker configuration
+        self.n_clicks = 500
+        self.click_duration = 10
+        self.cycle_duration = 30
+        self.actionTone_burst.triggered.connect(self.show_tone_burst_dialog)
+
         # Pens
-        self.evoked_pen = mkPen(color=(255, 0, 0), width=2, symbolBrush=(255, 0, 0), symbolSize=10)
-        self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o', symbolBrush=(230, 97, 0), symbolSize=10)
-        self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x', symbolBrush=(0, 0, 255), symbolSize=10)
+        self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
+        self.right_audiogram_pen = mkPen(color=(230, 97, 0),
+                                         width=3,
+                                         symbol='o')
+        self.left_audiogram_pen = mkPen(color=(0, 0, 255),
+                                        width=3,
+                                        symbol='x')
 
         # Checkbone also modifies the pen, so we might as well set it up right now
         self.checkBone.stateChanged.connect(self.checkbone_changed)
+        self.checkBone.setChecked(False)
 
         # Plot setup
-        self.evoked_X_axis = np.linspace(0, CYCLE_DURATION, CYCLE_DURATION * SAMPLINGRATE // 1000)
+        self.plotWidget.setMenuEnabled(False)
+        self.evoked_X_axis = np.linspace(0, self.cycle_duration, self.cycle_duration * SAMPLINGRATE // 1000)
         self.nulldata = np.zeros_like(self.evoked_X_axis)
-        self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen=self.evoked_pen)
-        self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
-        self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
+        self.plot_null()
         self.audiogram_figure_ready = False
 
         # Amplitude setup, initialize to midpoint
@@ -65,12 +76,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.id_max = len(self.amplitudes) - 1
         self.id_mid = self.amplitudes.index(0)  # 0 [dbHL]
         self.dbamp = self.amplitudes[self.id_mid]
-
-        # Inital clicker configuration
-        self.n_clicks = 500
-        self.click_duration = 10
-        self.cycle_duration = 30
-        self.actionTone_burst.triggered.connect(self.show_tone_burst_dialog)
 
         # Filepath to store the recording
         self.filepath = ''
@@ -91,11 +96,11 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         # Customize color for pushEVOKED and pushNOISE when disabled (set to gray)
         self.pushEVOKED.setStyleSheet("""
             QPushButton:disabled { background-color: gray; }
-            QPushButton { background-color: rgb(131, 153, 105); }
+            QPushButton { background-color: rgb(131, 153, 105); color: rgb(0, 0, 0); }
         """)
         self.pushNOISE.setStyleSheet("""
             QPushButton:disabled { background-color: gray; }
-            QPushButton { background-color: rgb(199, 122, 108); }
+            QPushButton { background-color: rgb(199, 122, 108); color: rgb(0, 0, 0); }
         """)
 
         # Initialize audiograms as nan arrays
@@ -144,12 +149,20 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         if self.checkBone.isChecked():
             self.evoked_pen = mkPen(color=(0, 255, 0), width=2)
-            self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='.', symbolPen=(230, 97, 0))
-            self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='.', symbolPen=(0, 0, 255))
+            self.right_audiogram_pen = mkPen(color=(230, 97, 0),
+                                             width=3,
+                                             symbol='o')
+            self.left_audiogram_pen = mkPen(color=(0, 0, 255),
+                                            width=3,
+                                            symbol='x')
         else:
             self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
-            self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=2, symbol='o', symbolPen=(230, 97, 0))
-            self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=2, symbol='x', symbolPen=(0, 0, 255))
+            self.right_audiogram_pen = mkPen(color=(230, 97, 0),
+                                             width=3,
+                                             symbol='o')
+            self.left_audiogram_pen = mkPen(color=(0, 0, 255),
+                                            width=3,
+                                            symbol='x')
 
     def change_process_path(self, mode):
         """
@@ -351,19 +364,35 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         self.labelStatus.setText(f"Audiogram saved to {fname}")
 
+    def set_axis_for_evoked(self):
+        """
+        Set labels, ranges and ticks for the evoked potential plot
+        """
+        self.plotWidget.setLabel('bottom', 'Time [ms]')
+        self.plotWidget.setLabel('left', 'Amplitude [uv]')
+        self.plotWidget.setXRange(self.evoked_X_axis[0], self.evoked_X_axis[-1], padding=0.)
+
+        ax = self.plotWidget.getAxis('bottom')
+        ax.setLabel('Time [ms]')
+        ay = self.plotWidget.getAxis('left')
+        ay.setLabel('Amplitude [uv]')
+
+        self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
+
     def plot_null(self):
         """
         Plot a null graph
         """
         # Reset the plotWidget by removing legends, ticks, axis labels, and all
-        self.plotWidget.plotItem.getAxis('bottom').setLabel('')
-        self.plotWidget.plotItem.getAxis('left').setLabel('')
         self.plotWidget.clear()
-
         self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen=self.evoked_pen)
-        self.plotWidget.plotItem.autoRange()
-        self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
-        self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
+        self.plotWidget.autoRange()
+        self.set_axis_for_evoked()
+
+        # Automatic ticks
+        self.plotWidget.getAxis('bottom').setTicks(None)
+        self.plotWidget.getAxis('left').setTicks(None)
+
 
     def plot_evoked(self):
         """
@@ -372,10 +401,12 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         if self.filepath:
             evoked = np.load(self.filepath)
             self.plotWidget.clear()
-            self.plotWidget.plot(self.evoked_X_axis, evoked, pen=self.evoked_pen)
+            self.plotWidget.plot(self.evoked_X_axis, evoked, pen=self.evoked_pen, name='Measured signal')
             self.plotWidget.plotItem.autoRange()
-            self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
-            self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
+
+            # Axis setup
+            self.set_axis_for_evoked()
+            self.plotWidget.addLegend()
 
     def plot_audiogram(self):
         """
@@ -383,10 +414,12 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         # Plotting
         self.plotWidget.clear()
+
         # Add legend at the bottom right
-        self.plotWidget.plotItem.addLegend(offset=(-30, 30))
-        self.plotWidget.plot(self.audiogram_left, pen='green', symbol='o', name='Left Ear')
-        self.plotWidget.plot(self.audiogram_right, pen='blue', symbol='x', name='Right Ear')
+        self.plotWidget.plot(self.audiogram_left, pen=self.left_audiogram_pen, name='Left ear',
+                             symbol='o', symbolBrush=(0, 0, 255), symbolPen=(0, 0, 255))
+        self.plotWidget.plot(self.audiogram_right, pen=self.right_audiogram_pen, name='Right ear',
+                             symbol='x', symbolBrush=(230, 97, 0), symbolPen=(230, 97, 0))
         self.plotWidget.setXRange(0, len(self.audiogram_left) - 1, padding=0.05)
         self.plotWidget.setYRange(-10, 100, padding=0.05)
         self.plotWidget.invertY(True)
@@ -397,9 +430,14 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         ax.setTicks([[(i, str(self.comboBoxFreq.itemText(i))) for i in range(len(self.audiogram_left))]])
         ax.setLabel('Frequency [Hz]')
         ay = self.plotWidget.getAxis('left')
-        ax.setTicks([[(i, str(self.amplitudes[i])) for i in range(len(self.amplitudes))]])
+        ay.setTicks([[(amp, str(amp)) for amp in range(-10, 110, 10)]])
         ay.setLabel('Amplitude [dB HL]')
-        self.plotWidget.addLegend()
+
+        # Legend at the BOTTOM RIGHT
+        legend = self.plotWidget.plotItem.addLegend()
+        legend.anchor((1, 1), (1, 1))
+        legend.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+        legend.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255)))
 
         # Update the audiogram's save status
         self.audiogram_figure_ready = True

@@ -31,6 +31,9 @@
        <property name="suffix">
         <string> [ms]</string>
        </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
        <property name="value">
         <number>10</number>
        </property>
@@ -50,6 +53,9 @@
        </property>
        <property name="suffix">
         <string> [ms]</string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
        </property>
        <property name="value">
         <number>30</number>
