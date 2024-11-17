@@ -2,8 +2,7 @@
 
 // defines
 #define SAMPLERATE 8000 // Hz
-#define NSAMPLESPERBUFFER 512
-#define INTERRUPT_PIN 2
+#define NSAMPLESPERBUFFER 256
 #define SERIALBAUD 960000
 #define READPIN 4
 
@@ -13,23 +12,24 @@ hw_timer_t *samplerTimer = NULL;
 volatile bool sampling_done = false;
 
 // ADC related variables
-volatile bool bufferA = true;
+volatile bool currentBufferIsA = true;
 volatile uint16_t adcBufferA[NSAMPLESPERBUFFER];
 volatile uint16_t adcBufferB[NSAMPLESPERBUFFER];
 volatile uint adcRead = 0;
 volatile uint16_t adcBufferIdx = 0;
 volatile uint16_t readVal = 0;
 volatile long n_samples = 0;
+char startSamplingFlag = 0;
 
 
 void sendBuffer(){
   // Choose the right bufffer, which is not in use by the ADC
-  if (!bufferA){
-    // Send the buffer to the Raspberry Pi
+  if (!currentBufferIsA){
+    // Send the buffer
     Serial.write((uint8_t *) adcBufferA, NSAMPLESPERBUFFER * 2);
   }
   else{
-    // Send the buffer to the Raspberry Pi
+    // Send the buffer
     Serial.write((uint8_t *) adcBufferB, NSAMPLESPERBUFFER * 2);
   }
 }
@@ -38,14 +38,14 @@ void sendBuffer(){
 void readADC(){
   // Read ADC value and write it to the SD card
   readVal = analogRead(READPIN);
-  if (bufferA){
+  if (currentBufferIsA){
     adcBufferA[adcBufferIdx++] = readVal;
   }
   else{
     adcBufferB[adcBufferIdx++] = readVal;
   }
   if (adcBufferIdx == NSAMPLESPERBUFFER){
-    bufferA = !bufferA;
+    currentBufferIsA = !currentBufferIsA;
     adcBufferIdx = 0;
     vTaskResume(sendTask);
   }
@@ -63,14 +63,6 @@ void IRAM_ATTR samplerTimerISER(){
   }
 }
 
-
-void IRAM_ATTR startSampling(){
-    detachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN));
-    timerRestart(samplerTimer);
-    timerAlarmEnable(samplerTimer);
-}
-
-
 void sendDataTask(void *pvParameters){
   for (;;){
     vTaskSuspend(NULL);
@@ -80,13 +72,17 @@ void sendDataTask(void *pvParameters){
 
 
 void setup(){
+  // Variable setup
+  adcRead = 0;
+  sampling_done = false;
+  adcBufferIdx = 0;
+  currentBufferIsA = true;
+
   // Pin configuration
-  pinMode(INTERRUPT_PIN, INPUT_PULLUP);    // Interrupt pin
   pinMode(READPIN, INPUT);               // ADC pin
 
   // Serial initialization
-  Serial.setRxBufferSize(NSAMPLESPERBUFFER * 2);
-  Serial.setTxBufferSize(NSAMPLESPERBUFFER * 2);
+  Serial.setTxBufferSize(2 * NSAMPLESPERBUFFER);
   Serial.begin(SERIALBAUD);
   if (!Serial) {
     return;
@@ -113,23 +109,27 @@ void setup(){
 
 
 void loop(){
+  Serial.println("Waiting for the number of samples");
   while(!Serial.available()) {}
   n_samples = Serial.parseInt();
-  // Wait for the serial to stop reading data
-  Serial.flush();
-  // Reset everything needed for the burst
-  adcRead = 0;
-  sampling_done = false;
-  adcBufferIdx = 0;
-  bufferA = true;
-  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), startSampling, RISING);
+  while(!Serial.available()) {}
+  Serial.readBytes(&startSamplingFlag, 1);
+  Serial.flush(); // Wait for the Serial to stop reading data
+  // Start sampling
+  timerRestart(samplerTimer);
+  timerAlarmEnable(samplerTimer);
   // Wait for the sampling and sending to finish
   while (!sampling_done) {}
   // Send the last buffer, if it is not empty
   if (adcBufferIdx > 0){
-    bufferA = !bufferA;
+    currentBufferIsA = !currentBufferIsA;
     sendBuffer();
   }
+  // Reset the variables
+  // Variable setup
+  adcRead = 0;
+  sampling_done = false;
+  adcBufferIdx = 0;
+  currentBufferIsA = true;
   n_samples = 0;
-  ESP.restart();
 }

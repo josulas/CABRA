@@ -1,10 +1,9 @@
 #include <arduino.h>
-#include <BluetoothSerial.h>
 
 // defines
-#define SAMPLERATE 5000 // Hz
+#define SAMPLERATE 8000 // Hz
 #define NSAMPLESPERBUFFER 256
-#define SERIALBAUD 500000
+#define SERIALBAUD 960000
 #define READPIN 4
 
 // Task related variables
@@ -21,18 +20,17 @@ volatile uint16_t adcBufferIdx = 0;
 volatile uint16_t readVal = 0;
 volatile long n_samples = 0;
 char startSamplingFlag = 0;
-BluetoothSerial SerialBT;
 
 
 void sendBuffer(){
   // Choose the right bufffer, which is not in use by the ADC
   if (!currentBufferIsA){
-    // Send the buffer to the Raspberry Pi
-    SerialBT.write((uint8_t *) adcBufferA, NSAMPLESPERBUFFER * 2);
+    // Send the buffer
+    Serial.write((uint8_t *) adcBufferA, NSAMPLESPERBUFFER * 2);
   }
   else{
-    // Send the buffer to the Raspberry Pi
-    SerialBT.write((uint8_t *) adcBufferB, NSAMPLESPERBUFFER * 2);
+    // Send the buffer
+    Serial.write((uint8_t *) adcBufferB, NSAMPLESPERBUFFER * 2);
   }
 }
 
@@ -84,11 +82,9 @@ void setup(){
   pinMode(READPIN, INPUT);               // ADC pin
 
   // Serial initialization
-  // SerialBT.setTxBufferSize(2 * NSAMPLESPERBUFFER);
-  Serial.begin(9600);
-  SerialBT.begin("CABRA");
-  SerialBT.begin(SERIALBAUD);
-  if (!SerialBT) {
+  Serial.setTxBufferSize(2 * NSAMPLESPERBUFFER);
+  Serial.begin(SERIALBAUD);
+  if (!Serial) {
     return;
   }
   
@@ -113,12 +109,12 @@ void setup(){
 
 
 void loop(){
-  SerialBT.println("Waiting for the number of samples");
-  while(!SerialBT.available()) {}
-  n_samples = SerialBT.parseInt();
-  while(!SerialBT.available()) {}
-  SerialBT.readBytes(&startSamplingFlag, 1);
-  SerialBT.flush(); // Wait for the Serial to stop reading data
+  Serial.println("Waiting for the number of samples");
+  while(!Serial.available()) {}
+  n_samples = Serial.parseInt();
+  while(!Serial.available()) {}
+  Serial.readBytes(&startSamplingFlag, 1);
+  Serial.flush(); // Wait for the Serial to stop reading data
   // Start sampling
   timerRestart(samplerTimer);
   timerAlarmEnable(samplerTimer);
