@@ -373,6 +373,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
             evoked = np.load(self.filepath)
             self.plotWidget.clear()
             self.plotWidget.plot(self.evoked_X_axis, evoked, pen=self.evoked_pen)
+            self.plotWidget.plotItem.autoRange()
             self.plotWidget.setXRange(0, CYCLE_DURATION, padding=0.)
             self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
 
