@@ -16,25 +16,25 @@ STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
 BAUDRATE = 960_000  # (DO NOT CHANGE)
 SAMPLINGRATE = 8_000 # Hz (DO NOT CHANGE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
-NSAMPLESPERBUFFER = 128 # (DO NOT CHANGE)
+NSAMPLESPERBUFFER = 512 # (DO NOT CHANGE)
 EEGRANGE = 5e-6 # Vpp
 SIGNALRANGE = 1 # Vpp
 ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
 QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.3  # V
-ADCMIN = 0.15 # V
+ADCMIN = 0.15 # V``
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 60e-6
+THRESHOLDV = 40
 GAIN = 50 * 390 / 3 # SIGNALRANGE / EEGRANGE
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
+INTERRUPTION_PIN = 11
 RESET_ESP_PIN = 12
 OUTPUT_DIR = 'saved_data'
 SERIAL_RECOGNIZER = "USB to UART Bridge"
-# SERIAL_RECOGNIZER = "Bluetooth"
 
 # Player parameters
 # Path to the C executable
-PLAYER_PATH_WINDOWS = "audio_playback.exe"
+PLAYER_PATH_WINDOWS = "./audio_playback.exe"
 PLAYER_PATH_LINUX = "./audio_playback_linux"
 TEMP_FILE = "~.wav"
 
@@ -124,10 +124,11 @@ class ESPSerial:
             return subprocess.Popen([PLAYER_PATH_WINDOWS], stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
                            stderr=subprocess.PIPE, text=True)
         elif platform_name == 'linux':
-            return subprocess.Popen([PLAYER_PATH_LINUX], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            return subprocess.Popen([PLAYER_PATH_LINUX], stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
                            stderr=subprocess.PIPE, text=True)
+
         else:
-            raise OSError(F"Platform {platform_name} not supported")
+            raise OSError("Unsupported platform")
 
     def _init_filter(self) -> np.ndarray:
         """
@@ -151,10 +152,10 @@ class ESPSerial:
             self.nbytes = self.nsamples * BYTESPERSAMPLE
             self.nusefulsamples = int(nclicks * cycle_duration / 1000.0 * SAMPLINGRATE)
             self.clicknumberofsamples = int(cycle_duration / 1000.0 * SAMPLINGRATE)
-            self.waitingtime = cycle_duration / 1000.0 * nclicks + 1.5
+            self.waitingtime = cycle_duration / 1000.0 * nclicks + 1
             # self.serial = Serial(self.port, self.baudrate, timeout=None)
             try:
-                self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime*2)
+                self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
             except serial.serialutil.SerialException:
                 raise ConnectionError("Serial connection lost")
 
@@ -314,9 +315,8 @@ def main():
                 try:
                     laptop_serial.set_serial(nclicks, cycle_duration)
                     laptop_serial.record_data()
-                except RuntimeError as e:
+                except RuntimeError:
                     sys.stderr.write('2')
-                    print(e)
                     sys.stderr.flush()
                     continue
                 except ConnectionError:
