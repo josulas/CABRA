@@ -262,6 +262,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     @pyqtSlot()
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
+        self.labelStatus.setText(data)
         if '.npy' in data:
             self.filepath = data.strip()
             self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
@@ -279,12 +280,13 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
             msg_box.exec()
 
         elif output == '2':
-            self.labelStatus.setText("Runtime error occurred.")
-            # TODO: Handle runtime error properly
+            self.labelStatus.setText("Data transmission error. Please try again.")
             self.process.kill()
             self.start_process()
         elif output == '3':
             self.labelStatus.setText("Value error occurred.")
+        else:
+            self.labelStatus.setText(output)
 
     # @pyqtSlot()
     def start_recording(self):
@@ -407,6 +409,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
             # Axis setup
             self.set_axis_for_evoked()
             self.plotWidget.addLegend()
+        else:
+            self.labelStatus.setText("Error: No file found.")
 
     def plot_audiogram(self):
         """

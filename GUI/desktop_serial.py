@@ -16,7 +16,7 @@ STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
 BAUDRATE = 960_000  # (DO NOT CHANGE)
 SAMPLINGRATE = 8_000 # Hz (DO NOT CHANGE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
-NSAMPLESPERBUFFER = 256 # (DO NOT CHANGE)
+NSAMPLESPERBUFFER = 128 # (DO NOT CHANGE)
 EEGRANGE = 5e-6 # Vpp
 SIGNALRANGE = 1 # Vpp
 ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
@@ -24,7 +24,7 @@ QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.3  # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 40e-6
+THRESHOLDV = 60e-6
 GAIN = 50 * 390 / 3 # SIGNALRANGE / EEGRANGE
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 RESET_ESP_PIN = 12
@@ -151,7 +151,7 @@ class ESPSerial:
             self.nbytes = self.nsamples * BYTESPERSAMPLE
             self.nusefulsamples = int(nclicks * cycle_duration / 1000.0 * SAMPLINGRATE)
             self.clicknumberofsamples = int(cycle_duration / 1000.0 * SAMPLINGRATE)
-            self.waitingtime = cycle_duration / 1000.0 * nclicks + 1
+            self.waitingtime = cycle_duration / 1000.0 * nclicks + 1.5
             # self.serial = Serial(self.port, self.baudrate, timeout=None)
             try:
                 self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
