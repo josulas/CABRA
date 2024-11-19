@@ -1,4 +1,4 @@
-#include <arduino.h>
+#include <Arduino.h>
 
 // defines
 #define SAMPLERATE 8000 // Hz

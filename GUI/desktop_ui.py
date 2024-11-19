@@ -2,6 +2,8 @@
 import sys
 import os
 from datetime import datetime
+from time import sleep
+
 # PySide6 imports
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QDialog, QStyle, QDialogButtonBox
 from PySide6.QtCore import QProcess, Slot as pyqtSlot, Signal as pyqtSignal
@@ -20,6 +22,9 @@ from desktop_serial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
 PEAK_TO_PEAK_EVOKED = 280  # [uV]
+DEFAULT_NCLICKS = 250
+DEFAULT_CLICK_DURATION = 10
+DEFAULT_CYCLE_DURATION = 30
 
 
 class CABRA_Window(Ui_MainWindow, QMainWindow):
@@ -46,9 +51,9 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.in_CABRASweep = False
 
         # Inital clicker configuration
-        self.n_clicks = 500
-        self.click_duration = 10
-        self.cycle_duration = 30
+        self.n_clicks = DEFAULT_NCLICKS
+        self.click_duration = DEFAULT_CLICK_DURATION
+        self.cycle_duration = DEFAULT_CYCLE_DURATION
         self.actionTone_burst.triggered.connect(self.show_tone_burst_dialog)
 
         # Pens
@@ -241,9 +246,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         nclicks = self.n_clicks
         click_duration = self.click_duration
         cycle_duration = self.cycle_duration
-        # click_duration = self.spinClickDuration.value()
-        # cycle_duration = self.spinCycleDuration.value()
-        return f"{Actions.RECORD} {nclicks} {freq_idx} {ear} {dbamp} {click_duration} {cycle_duration} \n"
+        return f"{Actions.RECORD} {nclicks} {freq_idx} {ear} {dbamp} {click_duration} {cycle_duration}\n"
 
     def start_process(self):
         """
@@ -264,8 +267,13 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         Restart the process
         """
         self.process.write(f"{Actions.EXIT}\n".encode())
-        self.process.kill()
-        self.process.waitForFinished()
+        # Wait for the process to finish
+        self.process.waitForFinished(500)
+        # If not properly finished, termintate and wait again
+        self.process.terminate()
+        self.process.waitForFinished(500)
+
+        # Start the process again
         self.start_process()
         self.labelStatus.setText(f"Restarted connection for {self.process_path}")
 
@@ -297,14 +305,14 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         elif output == '2':
             self.labelStatus.setText("Data transmission error. Please try again.")
-            self.process.kill()
-            self.start_process()
+            self.reset_stop_button_to_run()
+            self.pushRUN.setEnabled(True)
         elif output == '3':
             self.labelStatus.setText("Value error occurred.")
         else:
-            self.labelStatus.setText(output)
+            self.labelStatus.setText(f"Invalid message: {output}")
 
-    # @pyqtSlot()
+    @pyqtSlot()
     def start_recording(self):
         self.pushEVOKED.setEnabled(False)
         self.pushNOISE.setEnabled(False)
@@ -335,10 +343,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         Also restart process
         """
         self.labelStatus.setText("Test aborted.")
-        self.process.kill()
-        self.process.waitForFinished()
-        self.start_process()
-        self.state = CABRA_Window.STATE_IDLE
+        self.restart_process()
         self.pushCABRASweep.setEnabled(True)
         self.reset_stop_button_to_run()
         self.pushEVOKED.setEnabled(False)
@@ -390,8 +395,9 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.plotWidget.plotItem.showGrid(x=False, y=False)  # Disable the grid
         self.plotWidget.setLabel('bottom', 'Time [ms]')
         self.plotWidget.setLabel('left', 'Amplitude [uv]')
+        # self.plotWidget.setYRange(self.evoked_Y_range[0], self.evoked_Y_range[1], padding=0.)
+        self.plotWidget.autoRange()
         self.plotWidget.setXRange(self.evoked_X_axis[0], self.evoked_X_axis[-1], padding=0.)
-        self.plotWidget.setYRange(self.evoked_Y_range[0], self.evoked_Y_range[1], padding=0.)
 
         ax = self.plotWidget.getAxis('bottom')
         ax.setTicks([[(i, str(i)) for i in range(int(self.evoked_X_axis[0]), int(self.evoked_X_axis[-1]) + 1)]])
@@ -647,6 +653,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         Kill the process when the window is closed
         """
         self.process.write(f"{Actions.EXIT}\n".encode())
+        self.process.terminate()
         event.accept()
 
 

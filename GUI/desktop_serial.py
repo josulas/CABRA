@@ -154,7 +154,7 @@ class ESPSerial:
             self.waitingtime = cycle_duration / 1000.0 * nclicks + 1.5
             # self.serial = Serial(self.port, self.baudrate, timeout=None)
             try:
-                self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
+                self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime*2)
             except serial.serialutil.SerialException:
                 raise ConnectionError("Serial connection lost")
 
@@ -221,7 +221,7 @@ class ESPSerial:
         """
         if self.data is None or len(self.data) == 0:
             raise RuntimeError("No data recorded")
-        averaged_data = average_EEG(self.data, mode=mode)
+        averaged_data = average_EEG(self.data, mode=mode)*1e3
         self.averaged_data = averaged_data
 
     def save_raw_data(self, filename: str):
@@ -314,8 +314,9 @@ def main():
                 try:
                     laptop_serial.set_serial(nclicks, cycle_duration)
                     laptop_serial.record_data()
-                except RuntimeError:
+                except RuntimeError as e:
                     sys.stderr.write('2')
+                    print(e)
                     sys.stderr.flush()
                     continue
                 except ConnectionError:
