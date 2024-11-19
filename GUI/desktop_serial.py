@@ -13,7 +13,7 @@ from clicker import Clicker, EarSelect
 
 # Board parameters
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
-BAUDRATE = 960_000  # (DO NOT CHANGE)
+BAUDRATE = 500_000  # (DO NOT CHANGE)
 SAMPLINGRATE = 8_000 # Hz (DO NOT CHANGE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
 NSAMPLESPERBUFFER = 512 # (DO NOT CHANGE)
@@ -24,7 +24,7 @@ QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.3  # V
 ADCMIN = 0.15 # V``
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 40
+THRESHOLDV = 1e-3
 GAIN = 50 * 390 / 3 # SIGNALRANGE / EEGRANGE
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 INTERRUPTION_PIN = 11
@@ -222,7 +222,7 @@ class ESPSerial:
         """
         if self.data is None or len(self.data) == 0:
             raise RuntimeError("No data recorded")
-        averaged_data = average_EEG(self.data, mode=mode)*1e3
+        averaged_data = average_EEG(self.data, mode=mode)
         self.averaged_data = averaged_data
 
     def save_raw_data(self, filename: str):

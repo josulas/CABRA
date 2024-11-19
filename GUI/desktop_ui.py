@@ -22,7 +22,7 @@ from desktop_serial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
 PEAK_TO_PEAK_EVOKED = 280  # [uV]
-DEFAULT_NCLICKS = 250
+DEFAULT_NCLICKS = 300
 DEFAULT_CLICK_DURATION = 10
 DEFAULT_CYCLE_DURATION = 30
 
@@ -270,11 +270,12 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         # Wait for the process to finish
         self.process.waitForFinished(500)
         # If not properly finished, termintate and wait again
-        self.process.terminate()
+        self.process.kill()
         self.process.waitForFinished(500)
 
         # Start the process again
         self.start_process()
+        self.process.waitForStarted(500)
         self.labelStatus.setText(f"Restarted connection for {self.process_path}")
 
     def _print_msg(self):
@@ -653,7 +654,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         Kill the process when the window is closed
         """
         self.process.write(f"{Actions.EXIT}\n".encode())
-        self.process.terminate()
+        self.process.kill()
         event.accept()
 
 
