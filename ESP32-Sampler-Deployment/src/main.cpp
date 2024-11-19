@@ -3,7 +3,7 @@
 // defines
 #define SAMPLERATE 8000 // Hz
 #define NSAMPLESPERBUFFER 128
-#define SERIALBAUD 960000
+#define SERIALBAUD 500000
 #define READPIN 4
 
 // Task related variables
@@ -82,6 +82,7 @@ void setup(){
   pinMode(READPIN, INPUT);               // ADC pin
 
   // Serial initialization
+  Serial.setTxBufferSize(2 * NSAMPLESPERBUFFER);
   Serial.begin(SERIALBAUD);
   if (!Serial) {
     return;

@@ -22,7 +22,7 @@ from desktop_serial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
 PEAK_TO_PEAK_EVOKED = 280  # [uV]
-DEFAULT_NCLICKS = 300
+DEFAULT_NCLICKS = 500
 DEFAULT_CLICK_DURATION = 10
 DEFAULT_CYCLE_DURATION = 30
 
@@ -44,6 +44,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     def __init__(self):
         # Initial setup
         super().__init__()
+        self.setWindowIcon(QIcon('cabra.ico'))
         self.setupUi(self)
         self.state = CABRA_Window.STATE_IDLE
         self.current_freq_idx = 0
@@ -266,16 +267,11 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         Restart the process
         """
-        self.process.write(f"{Actions.EXIT}\n".encode())
-        # Wait for the process to finish
-        self.process.waitForFinished(500)
-        # If not properly finished, termintate and wait again
         self.process.kill()
         self.process.waitForFinished(500)
 
         # Start the process again
         self.start_process()
-        self.process.waitForStarted(500)
         self.labelStatus.setText(f"Restarted connection for {self.process_path}")
 
     def _print_msg(self):
@@ -284,7 +280,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         print(self.get_msg())
 
-    @pyqtSlot()
+    #@pyqtSlot()
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
         self.labelStatus.setText(data)
@@ -350,6 +346,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.pushEVOKED.setEnabled(False)
         self.pushNOISE.setEnabled(False)
         self.reset_dbamp()
+        self.state = CABRA_Window.STATE_IDLE
         self.plot_null()
 
     def audiogram_is_ready(self):
