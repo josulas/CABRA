@@ -19,6 +19,7 @@ from clicker import EarSelect
 from desktop_serial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
+PEAK_TO_PEAK_EVOKED = 280  # [uV]
 
 
 class CABRA_Window(Ui_MainWindow, QMainWindow):
@@ -52,20 +53,25 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         # Pens
         self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
-        self.right_audiogram_pen = mkPen(color=(230, 97, 0),
-                                         width=3,
-                                         symbol='o')
-        self.left_audiogram_pen = mkPen(color=(0, 0, 255),
-                                        width=3,
-                                        symbol='x')
+        self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=3)
+        self.right_audiogram_symbol = {'symbol': 'o',
+                                       'symbolPen': (230, 97, 0),
+                                       'symbolBrush': (230, 97, 0),
+                                       'symbolSize': 10}
+        self.left_audiogram_pen = mkPen(color=(0, 0, 255), width=3)
+        self.left_audiogram_symbol = {'symbol': 'x',
+                                      'symbolPen': (0, 20, 255),
+                                      'symbolBrush': (0, 20, 255),
+                                      'symbolSize': 10}
 
         # Checkbone also modifies the pen, so we might as well set it up right now
-        self.checkBone.stateChanged.connect(self.checkbone_changed)
+        self.checkBone.stateChanged.connect(self.set_pens_and_symbols)
         self.checkBone.setChecked(False)
 
         # Plot setup
         self.plotWidget.setMenuEnabled(False)
         self.evoked_X_axis = np.linspace(0, self.cycle_duration, self.cycle_duration * SAMPLINGRATE // 1000)
+        self.evoked_Y_range = (-PEAK_TO_PEAK_EVOKED // 2, PEAK_TO_PEAK_EVOKED // 2)
         self.nulldata = np.zeros_like(self.evoked_X_axis)
         self.plot_null()
         self.audiogram_figure_ready = False
@@ -143,26 +149,36 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.click_duration = dialog.spinClickDuration.value()
         self.cycle_duration = dialog.spinCycleDuration.value()
 
-    def checkbone_changed(self):
+    def set_pens_and_symbols(self):
         """
         Change the pen color for the evoked potential plot
         """
         if self.checkBone.isChecked():
+            # Green for evoked, cyan for right ear, yellow for left ear
             self.evoked_pen = mkPen(color=(0, 255, 0), width=2)
-            self.right_audiogram_pen = mkPen(color=(230, 97, 0),
-                                             width=3,
-                                             symbol='o')
-            self.left_audiogram_pen = mkPen(color=(0, 0, 255),
-                                            width=3,
-                                            symbol='x')
+            self.right_audiogram_pen = mkPen(color=(0, 255, 255), width=3)
+            self.right_audiogram_symbol = {'symbol': 'o',
+                                           'symbolPen': (0, 255, 255),
+                                           'symbolBrush': (0, 255, 255),
+                                           'symbolSize': 10}
+            self.left_audiogram_pen = mkPen(color=(255, 255, 0), width=3)
+            self.left_audiogram_symbol = {'symbol': 'x',
+                                          'symbolPen': (255, 255, 0),
+                                          'symbolBrush': (255, 255, 0),
+                                          'symbolSize': 10}
         else:
+            # Default colors: red for evoked, orange for right, blue for left
             self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
-            self.right_audiogram_pen = mkPen(color=(230, 97, 0),
-                                             width=3,
-                                             symbol='o')
-            self.left_audiogram_pen = mkPen(color=(0, 0, 255),
-                                            width=3,
-                                            symbol='x')
+            self.right_audiogram_pen = mkPen(color=(230, 97, 0), width=3)
+            self.right_audiogram_symbol = {'symbol': 'o',
+                                           'symbolPen': (230, 97, 0),
+                                           'symbolBrush': (230, 97, 0),
+                                           'symbolSize': 10}
+            self.left_audiogram_pen = mkPen(color=(0, 20, 255), width=3)
+            self.left_audiogram_symbol = {'symbol': 'x',
+                                          'symbolPen': (0, 20, 255),
+                                          'symbolBrush': (0, 20, 255),
+                                          'symbolSize': 10}
 
     def change_process_path(self, mode):
         """
@@ -368,16 +384,27 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         Set labels, ranges and ticks for the evoked potential plot
         """
+        self.plotWidget.plotItem.setTitle("")  # Clear the title
+        self.plotWidget.plotItem.showGrid(x=False, y=False)  # Disable the grid
         self.plotWidget.setLabel('bottom', 'Time [ms]')
         self.plotWidget.setLabel('left', 'Amplitude [uv]')
         self.plotWidget.setXRange(self.evoked_X_axis[0], self.evoked_X_axis[-1], padding=0.)
+        self.plotWidget.setYRange(self.evoked_Y_range[0], self.evoked_Y_range[1], padding=0.)
 
         ax = self.plotWidget.getAxis('bottom')
+        ax.setTicks([[(i, str(i)) for i in range(int(self.evoked_X_axis[0]), int(self.evoked_X_axis[-1]) + 1)]])
         ax.setLabel('Time [ms]')
         ay = self.plotWidget.getAxis('left')
+        ay.setTicks([[(i, str(i)) for i in range(self.evoked_Y_range[0], self.evoked_Y_range[1] + 1, 50)]])
         ay.setLabel('Amplitude [uv]')
 
-        self.plotWidget.showGrid(x=True, y=True, alpha=0.3)
+        # Automatic ticks
+        self.plotWidget.getAxis('bottom').setTicks(None)
+        self.plotWidget.getAxis('left').setTicks(None)
+
+        # Set a double grid
+        self.plotWidget.plotItem.showGrid(x=True, y=True, alpha=0.1)  # Minor grid
+        self.plotWidget.plotItem.showGrid(x=True, y=True, alpha=0.5)  # Major grid
 
     def plot_null(self):
         """
@@ -386,13 +413,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         # Reset the plotWidget by removing legends, ticks, axis labels, and all
         self.plotWidget.clear()
         self.plotWidget.plot(self.evoked_X_axis, self.nulldata, pen=self.evoked_pen)
-        self.plotWidget.autoRange()
         self.set_axis_for_evoked()
-
-        # Automatic ticks
-        self.plotWidget.getAxis('bottom').setTicks(None)
-        self.plotWidget.getAxis('left').setTicks(None)
-
 
     def plot_evoked(self):
         """
@@ -401,12 +422,11 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         if self.filepath:
             evoked = np.load(self.filepath)
             self.plotWidget.clear()
-            self.plotWidget.plot(self.evoked_X_axis, evoked, pen=self.evoked_pen, name='Measured signal')
-            self.plotWidget.plotItem.autoRange()
-
-            # Axis setup
+            self.plotWidget.plot(self.evoked_X_axis, evoked, pen=self.evoked_pen)
             self.set_axis_for_evoked()
-            self.plotWidget.addLegend()
+        else:
+            self.plot_null()
+            self.labelStatus.setText("No file to plot.")
 
     def plot_audiogram(self):
         """
@@ -417,9 +437,9 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
         # Add legend at the bottom right
         self.plotWidget.plot(self.audiogram_left, pen=self.left_audiogram_pen, name='Left ear',
-                             symbol='o', symbolBrush=(0, 0, 255), symbolPen=(0, 0, 255))
+                             **self.left_audiogram_symbol)
         self.plotWidget.plot(self.audiogram_right, pen=self.right_audiogram_pen, name='Right ear',
-                             symbol='x', symbolBrush=(230, 97, 0), symbolPen=(230, 97, 0))
+                             **self.right_audiogram_symbol)
         self.plotWidget.setXRange(0, len(self.audiogram_left) - 1, padding=0.05)
         self.plotWidget.setYRange(-10, 100, padding=0.05)
         self.plotWidget.invertY(True)
@@ -439,7 +459,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         legend.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
         legend.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255)))
 
-        # Update the audiogram's save status
+        # Update the audiogram's saved status
         self.audiogram_figure_ready = True
 
     ##############################################################################################
