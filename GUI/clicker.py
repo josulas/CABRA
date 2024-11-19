@@ -33,13 +33,14 @@ class Clicker(object):
                  nclicks: int = NCLICKS,
                  dbamp: int = 0,
                  ear: int = EarSelect.BOTH,
-                 smooth_period_percentage: float=0.05):
+                 smooth_period_percentage: float=0.05,
+                 ndB0val: float = NDB0VALF0):
         self.freq = freq
         self.cycle_duration = cycle_duration # ms
         self.click_duration = click_duration # ms
         self.samplingrate = samplingrate
         self.nclicks = nclicks
-        self.ndb0val = Clicker.NDB0VALF0 * (freq / Clicker.F0) ** Clicker.ALFA
+        self.ndb0val = ndB0val * (freq / Clicker.F0) ** Clicker.ALFA
         self.mindbamp = int(np.log10(1 / self.ndb0val) * 20)
         self.maxdbamp = int(np.log10(Clicker.MAXINT16 / self.ndb0val) * 20)
         if not self.mindbamp <= dbamp <= self.maxdbamp:
