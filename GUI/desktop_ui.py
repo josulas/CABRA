@@ -21,7 +21,7 @@ from clicker import EarSelect
 from desktop_serial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
-PEAK_TO_PEAK_EVOKED = 280  # [uV]
+PEAK_TO_PEAK_EVOKED = 42  # [uV]
 DEFAULT_NCLICKS = 500
 DEFAULT_CLICK_DURATION = 10
 DEFAULT_CYCLE_DURATION = 30
@@ -56,6 +56,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.click_duration = DEFAULT_CLICK_DURATION
         self.cycle_duration = DEFAULT_CYCLE_DURATION
         self.actionTone_burst.triggered.connect(self.show_tone_burst_dialog)
+        self.n_reps = 0 # Number of repetitions for a given test
 
         # Pens
         self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
@@ -273,6 +274,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         # Start the process again
         self.start_process()
         self.labelStatus.setText(f"Restarted connection for {self.process_path}")
+        self.audiogram_left = np.ones_like(self.audiogram_left) * np.nan
+        self.audiogram_right = np.ones_like(self.audiogram_right) * np.nan
 
     def _print_msg(self):
         """
@@ -283,10 +286,13 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     #@pyqtSlot()
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
-        self.labelStatus.setText(data)
+        # self.labelStatus.setText(data)
+        if not data:
+            return
         if '.npy' in data:
-            self.filepath = data.strip()
-            self.labelStatus.setText(f"Recording completed and stored at {self.filepath}")
+            filepath, n_reps = data.strip().split(';')
+            self.filepath = filepath
+            self.n_reps = int(n_reps)
             self.recording_completed.emit()
         else:
             self.handle_stderr()
@@ -294,6 +300,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     @pyqtSlot()
     def handle_stderr(self):
         output = self.process.readAllStandardError().data().decode()
+        if not output:
+            return
         # Connection error: popout window for user to check connection
         if output == '1':
             self.labelStatus.setText("Connection error occurred.")
@@ -303,9 +311,10 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         elif output == '2':
             self.labelStatus.setText("Data transmission error. Please try again.")
             self.reset_stop_button_to_run()
+            self.state = CABRA_Window.STATE_IDLE
             self.pushRUN.setEnabled(True)
         elif output == '3':
-            self.labelStatus.setText("Value error occurred.")
+            self.labelStatus.setText("No repetition fit within the threshold. Please try again.")
         else:
             self.labelStatus.setText(f"Invalid message: {output}")
 
@@ -322,7 +331,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
 
     def handle_recording_completed(self):
         # Update status
-        self.labelStatus.setText(f"Recording completed and stored at {self.filepath}. Indicate if the sound was heard.")
+        self.labelStatus.setText(f"Recording completed and stored at {self.filepath}, {self.n_reps} repetitions.")
         # Set pushNOISE and pushEVOKED to be enabled
         self.pushEVOKED.setEnabled(True)
         self.pushNOISE.setEnabled(True)
@@ -651,7 +660,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         Kill the process when the window is closed
         """
         self.process.write(f"{Actions.EXIT}\n".encode())
-        self.process.kill()
+        self.process.waitForBytesWritten()
+        self.process.terminate()
         event.accept()
 
 

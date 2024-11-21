@@ -17,15 +17,13 @@ BAUDRATE = 500_000  # (DO NOT CHANGE)
 SAMPLINGRATE = 8_000 # Hz (DO NOT CHANGE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
 NSAMPLESPERBUFFER = 128 # (DO NOT CHANGE)
-EEGRANGE = 5e-6 # Vpp
-SIGNALRANGE = 1 # Vpp
 ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
 QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.3  # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 1e-3
-GAIN = 50 * 390 / 3 # SIGNALRANGE / EEGRANGE
+THRESHOLDV = 300e-6
+GAIN = 50 * 390 / (8 / 3.2)
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 INTERRUPTION_PIN = 11
 RESET_ESP_PIN = 12
@@ -199,6 +197,7 @@ class ESPSerial:
         data = data.reshape((self.nclicks, self.clicknumberofsamples)).astype(np.float64)
         data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
         useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
+        # print(useful_data.shape[0])
         self.data = useful_data
 
     def close(self):
@@ -280,13 +279,13 @@ def manage_input():
         else:
             return action, None
     except ValueError:
-        sys.stderr.write('3')
+        sys.stderr.write('9')
         sys.stderr.flush()
         return None, None
     except KeyboardInterrupt:
         return Actions.EXIT, None
     except IndexError:
-        sys.stderr.write('3')
+        sys.stderr.write('9')
         sys.stderr.flush()
         return None, None
 
@@ -328,13 +327,18 @@ def main():
                     stop = True
                     break
                 laptop_serial.close()
-                laptop_serial.get_data_average()
+                try:
+                    laptop_serial.get_data_average()
+                except RuntimeError:
+                    sys.stderr.write('3')
+                    sys.stderr.flush()
+                    continue
                 f_name = f'{frequency}Hz_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.npy'
                 f_path = os.path.join(OUTPUT_DIR, f_name)
                 if not os.path.exists(OUTPUT_DIR):
                     os.makedirs(OUTPUT_DIR)
                 laptop_serial.save_averaged_data(f_path)
-                sys.stdout.write(f_path)
+                sys.stdout.write(f"{f_path};{laptop_serial.data.shape[0]}")
                 sys.stdout.flush()
             case Actions.RESET:
                 pass
