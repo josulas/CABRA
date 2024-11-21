@@ -3,8 +3,9 @@
 // defines
 #define SAMPLERATE 8000 // Hz
 #define NSAMPLESPERBUFFER 128
-#define SERIALBAUD 500000
+#define SERIALBAUD 960000
 #define READPIN 4
+#define INTERRUPTPIN 2
 
 // Task related variables
 TaskHandle_t sendTask;
@@ -34,7 +35,6 @@ void sendBuffer(){
   }
 }
 
-
 void readADC(){
   // Read ADC value and write it to the SD card
   readVal = analogRead(READPIN);
@@ -51,10 +51,15 @@ void readADC(){
   }
 }
 
+void IRAM_ATTR resumeSampling(){
+  if (!sampling_done && !timerAlarmEnabled(samplerTimer)){
+    timerRestart(samplerTimer);
+    timerAlarmEnable(samplerTimer);
+  }
+}
 
 void IRAM_ATTR samplerTimerISER(){
   if (adcRead >= n_samples){
-    timerAlarmDisable(samplerTimer);
     sampling_done = true;
   }
   else {
@@ -70,16 +75,16 @@ void sendDataTask(void *pvParameters){
   }
 }
 
-
 void setup(){
   // Variable setup
   adcRead = 0;
-  sampling_done = false;
+  sampling_done = true;
   adcBufferIdx = 0;
   currentBufferIsA = true;
 
   // Pin configuration
   pinMode(READPIN, INPUT);               // ADC pin
+  pinMode(INTERRUPTPIN, INPUT_PULLUP);   // Interrupt pin
 
   // Serial initialization
   Serial.setTxBufferSize(2 * NSAMPLESPERBUFFER);
@@ -105,31 +110,27 @@ void setup(){
     0,      /* Priority of the task */
     &sendTask,   /* Task handle. */
     0);     /* Core where the task should run */
+
+  attachInterrupt(INTERRUPTPIN, resumeSampling, RISING);
 }
 
 
 void loop(){
-  Serial.println("Waiting for the number of samples");
   while(!Serial.available()) {}
   n_samples = Serial.parseInt();
-  while(!Serial.available()) {}
-  Serial.readBytes(&startSamplingFlag, 1);
-  Serial.flush(); // Wait for the Serial to stop reading data
-  // Start sampling
-  timerRestart(samplerTimer);
-  timerAlarmEnable(samplerTimer);
+  // Attach the interrupt to the pin
+  sampling_done = false;
   // Wait for the sampling and sending to finish
   while (!sampling_done) {}
+  timerAlarmDisable(samplerTimer);
   // Send the last buffer, if it is not empty
   if (adcBufferIdx > 0){
     currentBufferIsA = !currentBufferIsA;
     sendBuffer();
   }
-  // Reset the variables
-  // Variable setup
   adcRead = 0;
-  sampling_done = false;
   adcBufferIdx = 0;
   currentBufferIsA = true;
   n_samples = 0;
+  ESP.restart();
 }
