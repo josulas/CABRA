@@ -165,7 +165,9 @@ def main():
                 # Write the path to the corresponding file
                 audio_limit = fake_audio_limits[freq_index][0 if ear == EarSelect.LEFT else 1]
                 out_path = EVOKED_PATH if click_dbamp >= audio_limit else NOISE_PATH
-                sys.stdout.write(out_path)
+                n_reps = np.random.randint(nclicks//2, nclicks)
+                msg = f"{out_path};{n_reps}"
+                sys.stdout.write(msg)
                 sys.stdout.flush()
             case Actions.RESET:
                 pass
