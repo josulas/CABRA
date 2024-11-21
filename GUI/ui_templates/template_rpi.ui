@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>994</width>
+    <height>639</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>CABRA</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QFrame" name="frameControl">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>100</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(55, 50, 50);
+gridline-color: rgb(0, 0, 0);
+color: rgb(0, 0, 0);
+border-color: rgb(0, 0, 0);
+font: 9pt &quot;Arial&quot;;
+color: rgb(255, 255, 255);
+</string>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <layout class="QFormLayout" name="formPatientData">
+         <item row="0" column="0">
+          <widget class="QLabel" name="labelName">
+           <property name="text">
+            <string>Name:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="nameEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">border-color: rgb(6, 6, 6);</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="labelDOB">
+           <property name="text">
+            <string>DOB:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDateEdit" name="dateEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="labelID">
+           <property name="text">
+            <string>ID:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="lineID">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">border-color: rgb(255, 0, 0);</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="labelFreq">
+             <property name="text">
+              <string>Frequency [Hz]:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="comboBoxFreq">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <item>
+              <property name="text">
+               <string>250</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>500</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>1000</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>2000</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>4000</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>8000</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QRadioButton" name="radioLeftEAR">
+             <property name="text">
+              <string>Left ear</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioRightEAR">
+             <property name="text">
+              <string>Right ear</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <property name="leftMargin">
+          <number>15</number>
+         </property>
+         <property name="rightMargin">
+          <number>15</number>
+         </property>
+         <item>
+          <widget class="QCheckBox" name="checkBone">
+           <property name="text">
+            <string>Bone conduction</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushCABRASweep">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Arial Bold</family>
+             <pointsize>11</pointsize>
+             <weight>75</weight>
+             <italic>true</italic>
+             <bold>true</bold>
+             <underline>false</underline>
+             <strikeout>false</strikeout>
+            </font>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(230, 97, 0);
+color: rgb(0, 0, 0);
+font: Bold Italic 11pt &quot;Arial Bold&quot;;</string>
+           </property>
+           <property name="text">
+            <string> CABRA Sweep</string>
+           </property>
+           <property name="icon">
+            <iconset theme="QIcon::ThemeIcon::ZoomFitBest">
+             <normaloff>.</normaloff>.</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushRUN">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <family>Arial</family>
+           <pointsize>11</pointsize>
+           <weight>87</weight>
+           <italic>false</italic>
+           <bold>true</bold>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(246, 211, 45);
+color: rgb(0,0,0);
+font: 700 11pt &quot;Arial&quot;;</string>
+         </property>
+         <property name="text">
+          <string>REC</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::AudioInputMicrophone">
+           <normaloff>.</normaloff>.</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushEVOKED">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(131, 153, 105);
+alternate-background-color: rgb(36, 31, 49);
+color: rgb(0, 0, 0);</string>
+         </property>
+         <property name="text">
+          <string>Evoked</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::AudioVolumeHigh">
+           <normaloff>.</normaloff>.</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushNOISE">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">alternate-background-color: rgb(36, 31, 49);
+background-color: rgb(199, 122, 108);
+color:rgb(0,0,0);</string>
+         </property>
+         <property name="text">
+          <string>Noise</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::AudioVolumeMuted">
+           <normaloff>.</normaloff>.</iconset>
+         </property>
+         <property name="checkable">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="PlotWidget" name="plotWidget" native="true"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelStatus">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Set the parameters for the experiment, and hit RUN</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>994</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionSave"/>
+   </widget>
+   <widget class="QMenu" name="menuOption">
+    <property name="title">
+     <string>Options</string>
+    </property>
+    <widget class="QMenu" name="menuMode">
+     <property name="title">
+      <string>Mode...</string>
+     </property>
+     <addaction name="actionCABRA_Default"/>
+     <addaction name="actionSimulator"/>
+     <addaction name="actionGoated"/>
+    </widget>
+    <addaction name="actionTone_burst"/>
+    <addaction name="menuMode"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuOption"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionNumber_of_clicks">
+   <property name="text">
+    <string>Number of clicks</string>
+   </property>
+  </action>
+  <action name="actionTone_burst">
+   <property name="text">
+    <string>Tone burst setup</string>
+   </property>
+  </action>
+  <action name="actionCABRA_Default">
+   <property name="text">
+    <string>CABRA [Default]</string>
+   </property>
+  </action>
+  <action name="actionSimulator">
+   <property name="text">
+    <string>Simulator</string>
+   </property>
+  </action>
+  <action name="actionGoated">
+   <property name="text">
+    <string>Goated</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PlotWidget</class>
+   <extends>QWidget</extends>
+   <header>pyqtgraph</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
