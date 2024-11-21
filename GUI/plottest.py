@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication
@@ -16,7 +17,24 @@ class MainWindow(QMainWindow):
         self.widget.showGrid(x=True, y=True, alpha=0.3)
         
 def main():
-    data = np.load('../saved_data/evoked.npy')
+    done = False
+    data = np.zeros(1)
+    base_dir = 'saved_data'
+    paths = os.listdir(base_dir)
+    path_str = '\n'.join([f"{i}: {path}" for (i, path) in enumerate(paths)])
+    print('Valid paths:') 
+    print(path_str)
+
+    while not done:
+        choice = input('Select path: ')
+        try:
+            path = paths[int(choice)]
+            print(f"You chose: {path}")
+            data = np.load(os.path.join(base_dir, path))
+            done = True
+        except (FileNotFoundError, ValueError):
+            print('Invalid file. Try again')
+
     print(data.shape)
     app = QApplication(sys.argv)
     window = MainWindow(data)
