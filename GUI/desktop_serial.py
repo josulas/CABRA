@@ -19,11 +19,11 @@ BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
 NSAMPLESPERBUFFER = 128 # (DO NOT CHANGE)
 ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
 QUANTIZATION = 2 ** ADCRESOLUTION
-ADCMAX = 3.3  # V
+ADCMAX = 3.1  # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 300e-6
-GAIN = 50 * 390 / (8 / 3.2)
+THRESHOLDV = 40e-6
+GAIN = 50 * 390 / (8 / 3.1)
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 INTERRUPTION_PIN = 11
 RESET_ESP_PIN = 12
@@ -213,7 +213,7 @@ class ESPSerial:
         """
         self.clicker = clicker
 
-    def get_data_average(self, mode: str='both'):
+    def get_data_average(self, mode: str='homogenous'):
         """
         Get the average of the recorded data
         :param mode: mode for the average
@@ -222,7 +222,7 @@ class ESPSerial:
         if self.data is None or len(self.data) == 0:
             raise RuntimeError("No data recorded")
         averaged_data = average_EEG(self.data, mode=mode)
-        self.averaged_data = averaged_data
+        self.averaged_data = averaged_data * ADCRANGE / (QUANTIZATION * GAIN) * 1e9 # nV
 
     def save_raw_data(self, filename: str):
         """

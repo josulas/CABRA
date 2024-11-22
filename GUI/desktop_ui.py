@@ -21,7 +21,7 @@ from clicker import EarSelect
 from desktop_serial import Actions, SAMPLINGRATE
 
 OUTPUT_DIR = 'saved_audiometries'
-PEAK_TO_PEAK_EVOKED = 42  # [uV]
+PEAK_TO_PEAK_EVOKED = 1000  # [uV]
 DEFAULT_NCLICKS = 500
 DEFAULT_CLICK_DURATION = 10
 DEFAULT_CYCLE_DURATION = 30
@@ -402,8 +402,8 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.plotWidget.plotItem.showGrid(x=False, y=False)  # Disable the grid
         self.plotWidget.setLabel('bottom', 'Time [ms]')
         self.plotWidget.setLabel('left', 'Amplitude [uv]')
-        # self.plotWidget.setYRange(self.evoked_Y_range[0], self.evoked_Y_range[1], padding=0.)
-        self.plotWidget.autoRange()
+        self.plotWidget.setYRange(self.evoked_Y_range[0], self.evoked_Y_range[1], padding=0.)
+        # self.plotWidget.autoRange()
         self.plotWidget.setXRange(self.evoked_X_axis[0], self.evoked_X_axis[-1], padding=0.)
 
         ax = self.plotWidget.getAxis('bottom')

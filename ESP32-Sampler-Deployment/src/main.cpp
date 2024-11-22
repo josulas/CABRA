@@ -53,7 +53,7 @@ void readADC(){
 
 
 void IRAM_ATTR samplerTimerISER(){
-  if (adcRead >= n_samples){
+  if (adcRead >= n_samples || n_samples == -1){
     timerAlarmDisable(samplerTimer);
     sampling_done = true;
   }
