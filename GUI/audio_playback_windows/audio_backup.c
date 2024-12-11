@@ -4,6 +4,7 @@
 #include <io.h>
 #include <windows.h>
 #include <mmsystem.h>
+#include <time.h>
 #pragma comment(lib, "winmm.lib")
 
 #define MAX_PATH_LENGTH 256
@@ -14,9 +15,12 @@ int audio_loaded = 0;
 double cpu_time_used;
 char *audio_data = NULL;
 DWORD audio_data_size = 0;
+FILE *file;
 
-int load_audio_into_memory(const char *file_path) {
-    FILE *file = fopen(file_path, "rb");
+clock_t start, end;
+
+int loadWavFile(const char *file_path) {
+    fopen_s(&file, file_path, "rb");
     if (!file) {
         fprintf(stderr, "Failed to open file: %s\n", file_path);
         return 0;
@@ -40,8 +44,10 @@ int load_audio_into_memory(const char *file_path) {
 
 // Simulate playing the audio (could be replaced with actual playback code)
 void play_audio() {
-    // if (PlaySound(audio_file_path, NULL, SND_FILENAME)){
-    if (PlaySound(audio_data, NULL, SND_MEMORY | SND_ASYNC)) {
+    start = clock();
+    if (PlaySound(audio_data, NULL, SND_MEMORY | SND_SYNC)) {
+        end = clock();
+        printf("Time taken: %f\n", (double)(end - start) / CLOCKS_PER_SEC);
         printf("F\n"); // Finished playing signal
         fflush(stdout);
     } else {
@@ -61,7 +67,7 @@ int main() {
         } else if (strcmp(command, "L") == 0) {
             // Load audio command
             if (path_set) {
-                if (load_audio_into_memory(audio_file_path)) {
+                if (loadWavFile(audio_file_path)) {
                     audio_loaded = 1;
                     printf("D\n"); // Acknowledge audio loading
                     fflush(stdout);

@@ -13,10 +13,12 @@ from clicker import Clicker, EarSelect
 
 # Board parameters
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
-BAUDRATE = 500_000  # (DO NOT CHANGE)
-SAMPLINGRATE = 8_000 # Hz (DO NOT CHANGE)
+BAUDRATE = 960_000  # (MUST BE THE SAME AS IN THE ESP32 CODE)
+NUMBER_OF_BAUDS_PER_BIT = 10 # (DO NOT CHANGE)
+SAMPLINGRATE = 32_000 # Hz (MUST BE THE SAME AS IN THE ESP32 CODE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
-NSAMPLESPERBUFFER = 128 # (DO NOT CHANGE)
+NSAMPLESPERBUFFER = 128 # (MUST BE THE SAME AS IN THE ESP32 CODE)
+MAXNSAMPLES = 50_000 # (MUST BE THE SAME AS IN THE ESP32 CODE)
 ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
 QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.1  # V
@@ -32,8 +34,8 @@ SERIAL_RECOGNIZER = "USB to UART Bridge"
 
 # Player parameters
 # Path to the C executable
-PLAYER_PATH_WINDOWS = "./audio_playback.exe"
-PLAYER_PATH_LINUX = "./audio_playback_linux"
+PLAYER_PATH_WINDOWS = r"./audio_playback_windows/audio_playback.exe"
+PLAYER_PATH_LINUX = r"./audio_playback_linux/audio_playback"
 TEMP_FILE = "~.wav"
 
 
@@ -58,7 +60,7 @@ class ESPSerial:
                  alpha_s: int = 45,
                  delta_f: int = 10,
                  f_pass: int = 150,
-                 f_stop: int = 3000,
+                 f_stop: int = 300,
                  amplitude_threshold: float = THRESHOLD):
         """
         Initializes the serial connection with the ESP32
@@ -82,6 +84,7 @@ class ESPSerial:
         self.buffersize = buffersize
         self.bytessample = bytessample
         self.nclicks = None
+        self.nsamples_per_click = None
         self.nsamples = None
         self.nbytes = None
         self.nusefulsamples = None
@@ -144,16 +147,19 @@ class ESPSerial:
     def set_serial(self, nclicks: int, cycle_duration: int):
         if self.port is not None:
             self.nclicks = nclicks
+            self.nsamples_per_click = int(np.ceil(cycle_duration * SAMPLINGRATE / 1000.0))
+            if self.nsamples_per_click > MAXNSAMPLES:
+                raise ValueError(F"Number of samples per click should be less than {MAXNSAMPLES}, got {self.nsamples_per_click} instead.")
             self.nsamples = int(np.ceil(nclicks * cycle_duration/ 1000.0 * SAMPLINGRATE / NSAMPLESPERBUFFER
         )) * NSAMPLESPERBUFFER
-         
             self.nbytes = self.nsamples * BYTESPERSAMPLE
             self.nusefulsamples = int(nclicks * cycle_duration / 1000.0 * SAMPLINGRATE)
             self.clicknumberofsamples = int(cycle_duration / 1000.0 * SAMPLINGRATE)
-            self.waitingtime = cycle_duration / 1000.0 * nclicks + 1
-            # self.serial = Serial(self.port, self.baudrate, timeout=None)
+            # self.waitingtime = cycle_duration / 1000.0 * nclicks + 1
+            self.waitingtime = self.nsamples_per_click / SAMPLINGRATE + self.nsamples_per_click * BYTESPERSAMPLE * 8 * NUMBER_OF_BAUDS_PER_BIT / self.baudrate + 0.5
             try:
                 self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
+                # self.serial = Serial(self.port, self.baudrate, timeout=None)
             except serial.serialutil.SerialException:
                 raise ConnectionError("Serial connection lost")
 
@@ -167,6 +173,7 @@ class ESPSerial:
             process.stdin.write(command + "\n")
             process.stdin.flush()
             response = process.stdout.readline().strip()
+            print(response)
             if response == expected_response:
                 return True
             else:
@@ -178,26 +185,27 @@ class ESPSerial:
             raise RuntimeError("Clicker object was not set")
 
         self.serial.read(self.serial.inWaiting())
-        self.serial.write(f"{self.nusefulsamples}".encode())
-        time.sleep(1)
         self.clicker.saveToneBurst(TEMP_FILE)
         send_command(self.player, TEMP_FILE, "U")
         send_command(self.player, "L", "D")
-        send_command(self.player, "S", "F")
-        self.serial.write("S".encode())
-        try:
-            binary_data = self.serial.read(self.nbytes)
-        except serial.serialutil.SerialException:
-            raise ConnectionError("Serial connection lost")
-        finally:
-            os.remove(TEMP_FILE)
-        if len(binary_data) != self.nbytes:
-            raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nbytes} bytes, got {len(binary_data)} bytes.")
-        data = np.frombuffer(binary_data, dtype=np.uint16)[:self.nusefulsamples]
-        data = data.reshape((self.nclicks, self.clicknumberofsamples)).astype(np.float64)
+        time.sleep(0.5)
+        data = np.zeros((self.nclicks, self.nsamples_per_click))
+        for _ in range(self.nclicks):
+            self.serial.write(f"{self.nsamples_per_click}".encode())
+            send_command(self.player, "P", "S")
+            print("here2")
+            self.serial.write("S".encode())
+            try:
+                binary_data = self.serial.read(self.nsamples_per_click * 2)
+            except serial.serialutil.SerialException:
+                raise ConnectionError("Serial connection lost")
+            if len(binary_data) != self.nsamples_per_click * 2:
+                raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nsamples_per_click} bytes, got {len(binary_data)} bytes.")
+            data[_] = np.frombuffer(binary_data, dtype=np.uint16).astype(np.float64)
+        # data = np.frombuffer(binary_data, dtype=np.uint16)[:self.nusefulsamples]
+        # data = data.reshape((self.nclicks, self.clicknumberofsamples)).astype(np.float64)
         data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
         useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
-        # print(useful_data.shape[0])
         self.data = useful_data
 
     def close(self):
@@ -308,8 +316,9 @@ def main():
                                   ear=ear,
                                   dbamp=click_dbamp,
                                   click_duration=click_duration,
-                                  cycle_duration=cycle_duration,
-                                  nclicks=nclicks)
+                                  cycle_duration=click_duration,
+                                  nclicks=1,
+                                  samplingrate=48_000)
                 laptop_serial.set_clicker(clicker)
                 try:
                     laptop_serial.set_serial(nclicks, cycle_duration)

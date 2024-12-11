@@ -1,5 +1,16 @@
 import numpy as np
 
+class AverageModes(object):
+    HOMOGENOUS = 'homogenous'
+    AMP = 'amp'
+    VAR = 'var'
+    BOTH = 'both'
+    def __iter__(self):
+        yield AverageModes.HOMOGENOUS
+        yield AverageModes.AMP
+        yield AverageModes.VAR
+        yield AverageModes.BOTH
+        
 
 def average_EEG(X: np.ndarray, mode: str='homogenous', eps=1e-6) -> np.ndarray:
     """
@@ -42,7 +53,8 @@ def average_EEG(X: np.ndarray, mode: str='homogenous', eps=1e-6) -> np.ndarray:
     elif mode == 'both':
         w = (a/V) / (np.sum(a**2/V))
 
-    return w.T.dot(X/np.sum(w))
+    # return w.T.dot(X/np.sum(w))
+    return w.T.dot(X)
 
 if __name__ == "__main__":
     X = np.random.rand(10, 100)
