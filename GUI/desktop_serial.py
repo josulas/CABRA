@@ -173,7 +173,6 @@ class ESPSerial:
             process.stdin.write(command + "\n")
             process.stdin.flush()
             response = process.stdout.readline().strip()
-            print(response)
             if response == expected_response:
                 return True
             else:
@@ -188,12 +187,10 @@ class ESPSerial:
         self.clicker.saveToneBurst(TEMP_FILE)
         send_command(self.player, TEMP_FILE, "U")
         send_command(self.player, "L", "D")
-        time.sleep(0.5)
         data = np.zeros((self.nclicks, self.nsamples_per_click))
         for _ in range(self.nclicks):
             self.serial.write(f"{self.nsamples_per_click}".encode())
             send_command(self.player, "P", "S")
-            print("here2")
             self.serial.write("S".encode())
             try:
                 binary_data = self.serial.read(self.nsamples_per_click * 2)

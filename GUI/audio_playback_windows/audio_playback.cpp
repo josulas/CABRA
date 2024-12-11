@@ -107,6 +107,7 @@ HRESULT PrepareAudioStream(WavAudioSource *pMySource);
 HRESULT PlayAudioStream(WavAudioSource *pMySource);
 void safeExit();
 int loadWavFile(const char *file_path);
+void SwapStereoChannels(unsigned char *audioData, WAVEFORMATEX *wfex, size_t totalFrames);
 
 
 // Main function
@@ -202,6 +203,8 @@ int main() {
 
 
 int loadWavFile(const char *file_path) {
+    UINT32 totalFrames;
+
     fopen_s(&file, file_path, "rb");
     if (!file) {
         fprintf(stderr, "Failed to open file: %s\n", file_path);
@@ -245,6 +248,9 @@ int loadWavFile(const char *file_path) {
     (((unsigned char) header[30]) << 16) | 
     (((unsigned char) header[31]) << 24);
     wfx.cbSize = 0;
+
+    totalFrames = (fileSize - 44) / wfx.nBlockAlign;
+    SwapStereoChannels(audioData, &wfx, totalFrames);
     
     return 1; // Success
 }
@@ -383,6 +389,7 @@ HRESULT PlayAudioStream(WavAudioSource *pMySource)
     hTask = AvSetMmThreadCharacteristics("Low Latency", &taskIndex);
     hr = pAudioClient->Start();  
     printf("S\n"); // Start signal
+    fflush(stdout);
     if (FAILED(hr)){
         safeExit();
         return hr;
@@ -461,3 +468,37 @@ void safeExit(){
     SAFE_RELEASE(pRenderClient)
     if (hEvent != NULL) CloseHandle(hEvent);
 }
+
+
+// Function to swap left and right channels
+void SwapStereoChannels(unsigned char* audioData, WAVEFORMATEX* wfex, size_t totalFrames) {
+    // Ensure it's stereo and PCM
+    if (wfex->nChannels != 2 || wfex->wFormatTag != WAVE_FORMAT_PCM) {
+        printf("The audio format is not stereo PCM. No swapping will be done.\n");
+        return;
+    }
+
+    // Calculate bytes per sample
+    size_t bytesPerSample = wfex->wBitsPerSample / 8;
+    if (bytesPerSample < 1) {
+        printf("Invalid bits per sample.\n");
+        return;
+    }
+
+    // Calculate the size of one frame (two channels, so 2 * bytesPerSample)
+    size_t frameSize = 2 * bytesPerSample;
+
+    // Swap left and right channels for each frame
+    for (size_t i = 0; i < totalFrames; ++i) {
+        // Pointer to the current frame
+        uint8_t* frame = audioData + i * frameSize;
+
+        // Swap left and right channels
+        for (size_t j = 0; j < bytesPerSample; ++j) {
+            uint8_t temp = frame[j];
+            frame[j] = frame[bytesPerSample + j];
+            frame[bytesPerSample + j] = temp;
+        }
+    }
+}
+
