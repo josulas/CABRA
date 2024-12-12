@@ -230,7 +230,8 @@ class Ui_MainWindow(object):
         self.pushEVOKED.setSizePolicy(sizePolicy3)
         self.pushEVOKED.setStyleSheet(u"background-color: rgb(131, 153, 105);\n"
 "alternate-background-color: rgb(36, 31, 49);\n"
-"color: rgb(0, 0, 0);")
+"color: rgb(0, 0, 0);\n"
+"font: 700 10pt \"Arial\";")
         icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeHigh))
         self.pushEVOKED.setIcon(icon2)
 
@@ -242,7 +243,8 @@ class Ui_MainWindow(object):
         self.pushNOISE.setSizePolicy(sizePolicy3)
         self.pushNOISE.setStyleSheet(u"alternate-background-color: rgb(36, 31, 49);\n"
 "background-color: rgb(199, 122, 108);\n"
-"color:rgb(0,0,0);")
+"color:rgb(0,0,0);\n"
+"font: 700 10pt \"Arial\";")
         icon3 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.AudioVolumeMuted))
         self.pushNOISE.setIcon(icon3)
         self.pushNOISE.setCheckable(False)
@@ -320,8 +322,9 @@ class Ui_MainWindow(object):
         self.checkBone.setText(QCoreApplication.translate("MainWindow", u"Bone conduction", None))
         self.pushCABRASweep.setText(QCoreApplication.translate("MainWindow", u" CABRA Sweep", None))
         self.pushRUN.setText(QCoreApplication.translate("MainWindow", u"REC", None))
-        self.pushEVOKED.setText(QCoreApplication.translate("MainWindow", u"Evoked", None))
-        self.pushNOISE.setText(QCoreApplication.translate("MainWindow", u"Noise", None))
+        self.pushEVOKED.setText(QCoreApplication.translate("MainWindow", u"HEARD", None))
+        self.pushNOISE.setText(QCoreApplication.translate("MainWindow", u"  NOT\n"
+"HEARD", None))
         self.labelStatus.setText(QCoreApplication.translate("MainWindow", u"Set the parameters for the experiment, and hit RUN", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuOption.setTitle(QCoreApplication.translate("MainWindow", u"Options", None))

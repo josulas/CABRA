@@ -317,7 +317,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         elif output == '2':
             self.labelStatus.setText("Data transmission error. Please try again.")
             self.reset_stop_button_to_run()
-            self.state = CABRA_Window.STATE_IDLE
             self.pushRUN.setEnabled(True)
         elif output == '3':
             self.labelStatus.setText("No repetition fit within the threshold. Please try again.")
