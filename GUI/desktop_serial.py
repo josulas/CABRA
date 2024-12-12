@@ -13,9 +13,9 @@ from clicker import Clicker, EarSelect
 
 # Board parameters
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
-BAUDRATE = 960_000  # (MUST BE THE SAME AS IN THE ESP32 CODE)
+BAUDRATE = 250_000  # (MUST BE THE SAME AS IN THE ESP32 CODE)
 NUMBER_OF_BAUDS_PER_BIT = 10 # (DO NOT CHANGE)
-SAMPLINGRATE = 12_000 # Hz (MUST BE THE SAME AS IN THE ESP32 CODE)
+SAMPLINGRATE = 16_000 # Hz (MUST BE THE SAME AS IN THE ESP32 CODE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
 NSAMPLESPERBUFFER = 128 # (MUST BE THE SAME AS IN THE ESP32 CODE)
 MAXNSAMPLES = 2_000 # (MUST BE THE SAME AS IN THE ESP32 CODE)
@@ -24,7 +24,7 @@ QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.1  # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 40e-6
+THRESHOLDV = 25e-6
 GAIN = 50 * 390 / (8 / 3.1)
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 OUTPUT_DIR = 'saved_data'
@@ -83,10 +83,6 @@ class ESPSerial:
         self.bytessample = bytessample
         self.nclicks = None
         self.nsamples_per_click = None
-        self.nsamples = None
-        self.nbytes = None
-        self.nusefulsamples = None
-        self.clicknumberofsamples = None
         self.waitingtime = None
         self.serial = None
 
@@ -147,12 +143,6 @@ class ESPSerial:
             self.nsamples_per_click = int(np.ceil(cycle_duration * SAMPLINGRATE / 1000.0))
             if self.nsamples_per_click > MAXNSAMPLES:
                 raise ValueError(F"Number of samples per click should be less than {MAXNSAMPLES}, got {self.nsamples_per_click} instead.")
-            self.nsamples = int(np.ceil(nclicks * cycle_duration/ 1000.0 * SAMPLINGRATE / NSAMPLESPERBUFFER
-        )) * NSAMPLESPERBUFFER
-            self.nbytes = self.nsamples * BYTESPERSAMPLE
-            self.nusefulsamples = int(nclicks * cycle_duration / 1000.0 * SAMPLINGRATE)
-            self.clicknumberofsamples = int(cycle_duration / 1000.0 * SAMPLINGRATE)
-            # self.waitingtime = cycle_duration / 1000.0 * nclicks + 1
             self.waitingtime = self.nsamples_per_click / SAMPLINGRATE + self.nsamples_per_click * BYTESPERSAMPLE * 8 * NUMBER_OF_BAUDS_PER_BIT / self.baudrate + 0.5
             try:
                 self.serial = Serial(self.port, self.baudrate, timeout=self.waitingtime)
@@ -180,10 +170,12 @@ class ESPSerial:
         if self.clicker is None:
             raise RuntimeError("Clicker object was not set")
 
+        max_transmission_errors = int(self.nclicks * .05)
+        transmission_errors = 0
         self.clicker.saveToneBurst(TEMP_WAV_FILE)
         send_command(self.player, TEMP_WAV_FILE, "U")
         send_command(self.player, "L", "D")
-        data = np.zeros((self.nclicks, self.nsamples_per_click))
+        data = []
         for _ in range(self.nclicks):
             self.serial.read(self.serial.inWaiting())
             self.serial.write(f"{self.nsamples_per_click}".encode())
@@ -194,12 +186,18 @@ class ESPSerial:
             except serial.serialutil.SerialException:
                 raise ConnectionError("Serial connection lost")
             if len(binary_data) != self.nsamples_per_click * 2:
-                raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nsamples_per_click} bytes, got {len(binary_data)} bytes.")
-            data[_] = np.frombuffer(binary_data, dtype=np.uint16).astype(np.float64)
-            time.sleep(0.012)
-        data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
-        useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
-        self.data = useful_data
+                transmission_errors += 1
+                if transmission_errors > max_transmission_errors:
+                    raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nsamples_per_click} bytes, got {len(binary_data)} bytes.")
+            else:
+                data.append(np.frombuffer(binary_data, dtype=np.uint16).astype(np.float64))
+            time.sleep(0.012) # Avoids glitches in the clicks
+        data = np.array(data)
+        if len(data):
+            data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
+            self.data =  data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
+        else:
+            self.data = data
 
     def close(self):
         """
