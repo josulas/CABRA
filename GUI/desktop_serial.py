@@ -15,10 +15,10 @@ from clicker import Clicker, EarSelect
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
 BAUDRATE = 960_000  # (MUST BE THE SAME AS IN THE ESP32 CODE)
 NUMBER_OF_BAUDS_PER_BIT = 10 # (DO NOT CHANGE)
-SAMPLINGRATE = 32_000 # Hz (MUST BE THE SAME AS IN THE ESP32 CODE)
+SAMPLINGRATE = 12_000 # Hz (MUST BE THE SAME AS IN THE ESP32 CODE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
 NSAMPLESPERBUFFER = 128 # (MUST BE THE SAME AS IN THE ESP32 CODE)
-MAXNSAMPLES = 50_000 # (MUST BE THE SAME AS IN THE ESP32 CODE)
+MAXNSAMPLES = 2_000 # (MUST BE THE SAME AS IN THE ESP32 CODE)
 ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
 QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.1  # V
@@ -27,8 +27,6 @@ ADCRANGE = ADCMAX - ADCMIN
 THRESHOLDV = 40e-6
 GAIN = 50 * 390 / (8 / 3.1)
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
-INTERRUPTION_PIN = 11
-RESET_ESP_PIN = 12
 OUTPUT_DIR = 'saved_data'
 SERIAL_RECOGNIZER = "USB to UART Bridge"
 
@@ -36,7 +34,7 @@ SERIAL_RECOGNIZER = "USB to UART Bridge"
 # Path to the C executable
 PLAYER_PATH_WINDOWS = r"./audio_playback_windows/audio_playback.exe"
 PLAYER_PATH_LINUX = r"./audio_playback_linux/audio_playback"
-TEMP_FILE = "~.wav"
+TEMP_WAV_FILE = "~.wav"
 
 
 class Actions:
@@ -57,10 +55,10 @@ class ESPSerial:
                  sampling_rate: int = SAMPLINGRATE,
                  buffersize: int = SAMPLINGRATE,
                  bytessample: int = BYTESPERSAMPLE,
-                 alpha_s: int = 45,
+                 alpha_s: int = 40,
                  delta_f: int = 10,
                  f_pass: int = 150,
-                 f_stop: int = 300,
+                 f_stop: int = 3000,
                  amplitude_threshold: float = THRESHOLD):
         """
         Initializes the serial connection with the ESP32
@@ -138,8 +136,7 @@ class ESPSerial:
         """
         bandpass_iir = signal.iirdesign([self.f_pass, self.f_stop],
                                         [self.f_pass - self.delta_f, self.f_stop + self.delta_f],
-                                        .2,
-                                        self.alpha_s,
+                                        gpass=1, gstop = self.alpha_s,
                                         fs=self.sampling_rate,
                                         output='sos')
         return bandpass_iir
@@ -183,12 +180,12 @@ class ESPSerial:
         if self.clicker is None:
             raise RuntimeError("Clicker object was not set")
 
-        self.serial.read(self.serial.inWaiting())
-        self.clicker.saveToneBurst(TEMP_FILE)
-        send_command(self.player, TEMP_FILE, "U")
+        self.clicker.saveToneBurst(TEMP_WAV_FILE)
+        send_command(self.player, TEMP_WAV_FILE, "U")
         send_command(self.player, "L", "D")
         data = np.zeros((self.nclicks, self.nsamples_per_click))
         for _ in range(self.nclicks):
+            self.serial.read(self.serial.inWaiting())
             self.serial.write(f"{self.nsamples_per_click}".encode())
             send_command(self.player, "P", "S")
             self.serial.write("S".encode())
@@ -199,8 +196,7 @@ class ESPSerial:
             if len(binary_data) != self.nsamples_per_click * 2:
                 raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nsamples_per_click} bytes, got {len(binary_data)} bytes.")
             data[_] = np.frombuffer(binary_data, dtype=np.uint16).astype(np.float64)
-        # data = np.frombuffer(binary_data, dtype=np.uint16)[:self.nusefulsamples]
-        # data = data.reshape((self.nclicks, self.clicknumberofsamples)).astype(np.float64)
+            time.sleep(0.012)
         data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
         useful_data = data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
         self.data = useful_data
