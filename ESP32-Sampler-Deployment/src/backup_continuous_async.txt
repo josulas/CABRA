@@ -1,0 +1,109 @@
+#include <Arduino.h>
+
+// defines
+#define SAMPLERATE 20000 // Hz
+#define CONVERSIONS 4 // True sample rate is SAMPLERATE / CONVERSIONS
+#define NSAMPLESPERBUFFER 128
+#define MAXSAMPLES 2048
+#define SERIALBAUD 960000
+#define READPIN 34
+
+// Task related variables
+TaskHandle_t sendTask;
+hw_timer_t *samplerTimer = NULL;
+volatile bool conversion_done = false;
+
+// ADC related variables
+adc_continuous_data_t *result = NULL;
+uint8_t adc_pins[] = {READPIN};
+uint8_t adc_pins_count = sizeof(adc_pins) / sizeof(uint8_t);
+volatile long n_samples = 0;
+char startSamplingFlag = 0;
+uint16_t adcBuffer[MAXSAMPLES];
+uint16_t sendBufferIdx = 0;
+uint16_t adcBufferIdx = 0;
+
+
+// Functions
+void ARDUINO_ISR_ATTR adcComplete() {
+ conversion_done = true;
+}
+
+void sendDataTask(void *pvParameters){
+  for (;;){
+    vTaskSuspend(NULL);
+    Serial.write((uint8_t *) (adcBuffer + sendBufferIdx), NSAMPLESPERBUFFER * 2);
+    sendBufferIdx = sendBufferIdx + NSAMPLESPERBUFFER;
+  }
+}
+
+
+void setup(){
+  // Pin configuration
+  // pinMode(READPIN, INPUT);               // ADC pin
+  
+  // Serial initialization
+  Serial.setTxBufferSize(2 * NSAMPLESPERBUFFER);
+  Serial.begin(SERIALBAUD);
+  if (!Serial) {
+    return;
+  }
+
+  // Continuous Sampling Configuration
+  analogContinuousSetWidth(12);
+  analogContinuousSetAtten(ADC_11db);
+  if (analogContinuous(adc_pins, adc_pins_count, CONVERSIONS, SAMPLERATE, &adcComplete)){
+    printf("Continuous sampling started\n");
+  } else{
+    printf("Error starting continuous sampling\n");
+  }
+
+  // Create a task that will send the data
+  xTaskCreatePinnedToCore(
+    sendDataTask,   /* Function to implement the task */
+    "sendDataTask", /* Name of the task */
+    1000,  /* Stack size in words */
+    NULL,   /* Task input parameter */
+    0,      /* Priority of the task */
+    &sendTask,   /* Task handle. */
+    0);     /* Core where the task should run */
+}
+
+
+void loop(){
+  while(!Serial.available()) {}
+  n_samples = Serial.parseInt();
+  while(!Serial.available()) {}
+  Serial.readBytes(&startSamplingFlag, 1);
+  Serial.flush(); // Wait for the Serial to stop reading data
+  // Start sampling
+  analogContinuousStart();
+  while(adcBufferIdx < n_samples){
+    if (conversion_done){
+      conversion_done = false;
+      if (analogContinuousRead(&result, 0)){
+        adcBuffer[adcBufferIdx++] = result[0].avg_read_raw;
+        if (adcBufferIdx >= NSAMPLESPERBUFFER + sendBufferIdx){
+          vTaskResume(sendTask);
+        }
+      } else{
+        Serial.println("Error reading data");
+      }
+    }
+  }
+  // Stop sampling
+  analogContinuousStop();
+  // Send the remaining data
+  while(adcBufferIdx >= sendBufferIdx + NSAMPLESPERBUFFER){
+    Serial.write((uint8_t *) (adcBuffer + sendBufferIdx), NSAMPLESPERBUFFER * 2);
+    sendBufferIdx = sendBufferIdx + NSAMPLESPERBUFFER;
+  }
+  if (adcBufferIdx > sendBufferIdx){
+    Serial.write((uint8_t *) (adcBuffer + sendBufferIdx), (adcBufferIdx - sendBufferIdx) * 2);
+  }
+  // Reset the variables
+  conversion_done = false;
+  adcBufferIdx = 0;
+  sendBufferIdx = 0;
+  n_samples = 0;
+}
