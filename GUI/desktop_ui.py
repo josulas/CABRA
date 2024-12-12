@@ -10,15 +10,18 @@ from PySide6.QtCore import QProcess, Slot as pyqtSlot, Signal as pyqtSignal
 from PySide6.QtGui import QShortcut, QKeySequence, QIcon
 from PySide6 import QtGui, QtCore
 from pyqtgraph.exporters import ImageExporter
+
 # Plotting related imports
 from pyqtgraph import mkPen
 import numpy as np
+
 # Local imports
 from ui_templates.dialog_reconnect import Ui_DialogReconnect
 from ui_templates.dialog_tone_burst import Ui_DialogToneBurst
 from ui_templates.template_desktop import Ui_MainWindow
 from clicker import EarSelect
 from desktop_serial import Actions, SAMPLINGRATE
+from inference_system import find_wave_v, threshold_detection
 
 OUTPUT_DIR = 'saved_audiometries'
 PEAK_TO_PEAK_EVOKED = 1000  # [nV]
@@ -56,7 +59,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.click_duration = DEFAULT_CLICK_DURATION
         self.cycle_duration = DEFAULT_CYCLE_DURATION
         self.actionTone_burst.triggered.connect(self.show_tone_burst_dialog)
-        self.n_reps = 0 # Number of repetitions for a given test
+        self.n_reps = 0  # Number of repetitions for a given test
 
         # Pens
         self.evoked_pen = mkPen(color=(255, 0, 0), width=2)
@@ -90,8 +93,10 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.id_mid = self.amplitudes.index(0)  # 0 [dbHL]
         self.dbamp = self.amplitudes[self.id_mid]
 
-        # Filepath to store the recording
+        # Filepath to store the recording, and features dict
         self.filepath = ''
+        self.evoked_signal = ''
+        self.wave_features = None
 
         # Process communication setup
         self.process = QProcess(self)
@@ -254,6 +259,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         Initialize the process to communicate with the ESP board (or simulation) script
         """
+        print(f"Starting process with {self.process_path}")
         self.process.start("python", [self.process_path])
         started = self.process.waitForStarted(500)
         if not started:
@@ -283,7 +289,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         print(self.get_msg())
 
-    #@pyqtSlot()
+    # @pyqtSlot()
     def handle_stdout(self):
         data = self.process.readAllStandardOutput().data().decode()
         # self.labelStatus.setText(data)
@@ -330,11 +336,17 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.process.write(self.get_msg().encode())
 
     def handle_recording_completed(self):
-        # Update status
-        self.labelStatus.setText(f"Recording completed and stored at {self.filepath}, {self.n_reps} repetitions.")
         # Set pushNOISE and pushEVOKED to be enabled
         self.pushEVOKED.setEnabled(True)
         self.pushNOISE.setEnabled(True)
+        # Extract features
+        self.evoked_signal = np.load(self.filepath)
+        self.wave_features = find_wave_v(self.evoked_X_axis, self.evoked_signal, plot=False)
+        # Check if the sound was perceived
+        perceived = threshold_detection(self.wave_features)
+        perceived_str = "perceived" if perceived else "not perceived"
+        self.labelStatus.setText(f"Recording completed and stored at {self.filepath}, {self.n_reps} repetitions. " + \
+                                 f"CABRA suggests: Sound {perceived_str}.")
         # Plot
         self.plot_evoked()
 
@@ -400,9 +412,9 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         self.plotWidget.plotItem.setTitle("")  # Clear the title
         self.plotWidget.plotItem.showGrid(x=False, y=False)  # Disable the grid
-        
+
         self.plotWidget.setYRange(self.evoked_Y_range[0], self.evoked_Y_range[1], padding=0.)
-        #self.plotWidget.autoRange()
+        # self.plotWidget.autoRange()
         self.plotWidget.setXRange(self.evoked_X_axis[0], self.evoked_X_axis[-1], padding=0.)
 
         ax = self.plotWidget.getAxis('bottom')
@@ -434,10 +446,28 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         Plot the evoked potential
         """
         if self.filepath:
-            evoked = np.load(self.filepath)
+            # Legend at the BOTTOM RIGHT
+            legend = self.plotWidget.plotItem.addLegend()
+            legend.anchor((1, 0), (1, 0))
+
+            # Plot evoked signal
             self.plotWidget.clear()
-            self.plotWidget.plot(self.evoked_X_axis, evoked, pen=self.evoked_pen)
+            self.plotWidget.plot(self.evoked_X_axis, self.evoked_signal, pen=self.evoked_pen, name='Evoked Potential')
+
+            # Superimpose the detected wave V
+            wave_V_start, wave_V_end = self.wave_features['wave_start_index'], self.wave_features['wave_end_index']
+            self.plotWidget.plot(self.evoked_X_axis[wave_V_start: wave_V_end],
+                                 self.evoked_signal[wave_V_start: wave_V_end], pen=mkPen(color='orange', width=2),
+                                 name='Wave V')
+
+            # Add a marker at the peak
+            self.plotWidget.plot([self.evoked_X_axis[self.wave_features['peak_index']]],
+                                 [self.evoked_signal[self.wave_features['peak_index']]], pen=None,
+                                 symbol='x', symbolPen='cyan', symbolBrush='cyan', symbolSize=10, name='Peak')
+
+            # Axis setup
             self.set_axis_for_evoked()
+
         else:
             self.plot_null()
             self.labelStatus.setText("No file to plot.")
@@ -448,8 +478,6 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         """
         # Plotting
         self.plotWidget.clear()
-
-        # Add legend at the bottom right
         self.plotWidget.plot(self.audiogram_left, pen=self.left_audiogram_pen, name='Left ear',
                              **self.left_audiogram_symbol)
         self.plotWidget.plot(self.audiogram_right, pen=self.right_audiogram_pen, name='Right ear',

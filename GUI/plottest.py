@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from PySide6.QtWidgets import QMainWindow, QApplication
 import pyqtgraph as pg
 
 CLICK_DURATION = 30 # ms

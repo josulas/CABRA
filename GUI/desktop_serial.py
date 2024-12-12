@@ -33,7 +33,7 @@ SERIAL_RECOGNIZER = "USB to UART Bridge"
 # Player parameters
 # Path to the C executable
 PLAYER_PATH_WINDOWS = r"./audio_playback_windows/audio_playback.exe"
-PLAYER_PATH_LINUX = r"./audio_playback_linux/audio_playback"
+PLAYER_PATH_LINUX = r"./audio_playback_linux"
 TEMP_WAV_FILE = "~.wav"
 
 
