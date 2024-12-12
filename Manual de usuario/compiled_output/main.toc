@@ -1,0 +1,14 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Introducción}{3}{section.1}%
+\contentsline {section}{\numberline {2}Configuración inicial}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Componentes}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Instalación del software}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Configuración de la placa de adquisición de datos}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Configuración de los auriculares}{5}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Uso de la interfaz gráfica]}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Verificación de la conexión con CABRA}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Realización del estudio de audiometría}{6}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Forma manual}{6}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}Forma automática (CABRASweep)}{8}{subsubsection.3.2.2}%
+\contentsline {section}{\numberline {4}Discusión}{8}{section.4}%
+\contentsline {section}{\numberline {5}Conclusión}{8}{section.5}%

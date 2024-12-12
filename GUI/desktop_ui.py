@@ -658,6 +658,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
             self.labelStatus.setText("CABRASweep completed.")
             for widget in [self.pushCABRASweep, self.nameEdit, self.dateEdit, self.lineID]:
                 widget.setEnabled(True)
+            self.plot_audiogram()
             self.in_CABRASweep = False
 
     # da GOAT
