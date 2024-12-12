@@ -97,10 +97,37 @@ las frecuencias y ambos oídos.
 Al presionar este botón, el programa realizará automáticamente todas las pruebas, avanzando de frecuencia en
 frecuencia.
 El usuario, por su parte, sólo deberá indicar si el paciente escuchó o no cada estímulo, de la misma manera que se
-describió en la sección anterior.%  \ref{manual}.
-%Al finalizar, se visualizará en pantalla el audiograma del paciente, y se almacenará en un archivo.
+describió en la sección anterior \ref{manual}.
+Al finalizar, se visualizará en pantalla el audiograma del paciente, y se almacenará en un archivo.
 
+\subsection{Ajuste de parámetros avanzados}
 
+Los estímulos generados por CABRA son de la forma \textit{tone bursts}, que consisten en una onda senoidal de
+frecuencia fija, con una duración de duración predeterminada, seguido de silencio.
+Este estímulo se repite varias veces, y se promedian los resultados de cada medición para obtener un potencial evocado.
+Por lo tanto, el estímulo generado se caracteriza por su frecuencia, duración del tono, duración del silencio, y
+número de repeticiones.
 
+A priori, desde el panel de control, sólo se puede elegir la frecuencia del sonido, y se toma por default una
+duración del tono de 10 [ms], una duración total del ciclo de 30 [ms] (es decir: 10 [ms] de tono y 20 [ms] de
+silencio), y 500 repeticiones.
+Los valores de duraión del tono y del ciclo, así como el número de repeticiones, se pueden modificar mediante la
+barra de herramientas, seleccionando "Options" y luego "Tone burst setup".
+Esto abrirá una ventana emergente que permite modificar estos parámetros.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{figuras/tone_bursts_setup}
+    \caption{Ventana emergente de configuración de los parámetros del tono}
+    \label{fig:GUI_tone_burst_setup}
+\end{figure}
+
+\subsection{Simulación} \label{simulacion}
+
+Para facilitar la utilización del programa, CABRA cuenta con un modo de simulación.
+Este modo permite al usuario familiarizarse con la interfaz gráfica y con los procedimientos de la audiometría, sin
+la necesidad de contar con un audiometro conectado ni con un paciente.
+Para activarlo, desde la barra de herramientas, seleccionar "Options", luego entrar al menú "Mode..." y seleccionar "
+Simulator".
+Para volver al modo original, seleccionar desde el mismo menú la opción "CABRA [default]".
 

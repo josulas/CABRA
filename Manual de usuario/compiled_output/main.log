@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2024.8.27)  12 DEC 2024 17:46
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2024.8.27)  12 DEC 2024 19:26
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1093,7 +1093,7 @@ d_output/main.out)
 \openout3 = `main.out'.
 
  (./00-caratula.tex
-<figuras/cabra_logo.png, id=56, 626.34pt x 768.8725pt>
+<figuras/cabra_logo.png, id=64, 626.34pt x 768.8725pt>
 File: figuras/cabra_logo.png Graphic file (type png)
 <use figuras/cabra_logo.png>
 Package pdftex.def Info: figuras/cabra_logo.png  used on input line 17.
@@ -1111,42 +1111,46 @@ LaTeX Info: Redefining \% on input line 1.
 \openout4 = `main.toc'.
 
  [2] (./01-introduccion.tex) (./02-configuracion.tex [3]
-<figuras/electrodos.png, id=91, 687.56876pt x 410.53375pt>
+<figuras/electrodos.png, id=101, 687.56876pt x 410.53375pt>
 File: figuras/electrodos.png Graphic file (type png)
 <use figuras/electrodos.png>
 Package pdftex.def Info: figuras/electrodos.png  used on input line 40.
 (pdftex.def)             Requested size: 213.39566pt x 127.41449pt.
 )
 (./03-GUI.tex [4 <./figuras/electrodos.png (PNG copy)>]
-<figuras/gui_basic.png, id=107, 1112.155pt x 868.24374pt>
+<figuras/gui_basic.png, id=117, 1112.155pt x 868.24374pt>
 File: figuras/gui_basic.png Graphic file (type png)
 <use figuras/gui_basic.png>
 Package pdftex.def Info: figuras/gui_basic.png  used on input line 16.
 (pdftex.def)             Requested size: 341.43436pt x 266.5561pt.
-<figuras/connection_error_popup.png, id=108, 293.095pt x 199.74625pt>
+<figuras/connection_error_popup.png, id=118, 293.095pt x 199.74625pt>
 File: figuras/connection_error_popup.png Graphic file (type png)
 <use figuras/connection_error_popup.png>
 Package pdftex.def Info: figuras/connection_error_popup.png  used on input line
  31.
 (pdftex.def)             Requested size: 170.71393pt x 116.34056pt.
  [5 <./figuras/gui_basic.png>]
-
-LaTeX Warning: Reference `simulacion' on page 6 undefined on input line 41.
-
-<figuras/cabra_gui_test_evoked.png, id=115, 1112.155pt x 868.24374pt>
+<figuras/cabra_gui_test_evoked.png, id=125, 1112.155pt x 868.24374pt>
 File: figuras/cabra_gui_test_evoked.png Graphic file (type png)
 <use figuras/cabra_gui_test_evoked.png>
 Package pdftex.def Info: figuras/cabra_gui_test_evoked.png  used on input line 
 74.
 (pdftex.def)             Requested size: 341.43436pt x 266.5561pt.
-[6 <./figuras/connection_error_popup.png>]
-<figuras/GUI_audiogram.png, id=123, 1112.155pt x 868.24374pt>
+ [6 <./figuras/connection_error_popup.png>]
+<figuras/GUI_audiogram.png, id=133, 1112.155pt x 868.24374pt>
 File: figuras/GUI_audiogram.png Graphic file (type png)
 <use figuras/GUI_audiogram.png>
 Package pdftex.def Info: figuras/GUI_audiogram.png  used on input line 84.
 (pdftex.def)             Requested size: 341.43436pt x 266.5561pt.
- [7 <./figuras/cabra_gui_test_evoked.png>]) (./04-archivos.tex) (./05-soporte.t
-ex) [8 <./figuras/GUI_audiogram.png>]
+ [7 <./figuras/cabra_gui_test_evoked.png>]
+<figuras/tone_bursts_setup.png, id=141, 372.39125pt x 283.0575pt>
+File: figuras/tone_bursts_setup.png Graphic file (type png)
+<use figuras/tone_bursts_setup.png>
+Package pdftex.def Info: figuras/tone_bursts_setup.png  used on input line 120.
+
+(pdftex.def)             Requested size: 170.71393pt x 129.76315pt.
+ [8 <./figuras/GUI_audiogram.png>]) (./04-archivos.tex)
+(./05-soporte.tex) [9 <./figuras/tone_bursts_setup.png>]
 (/home/gonzagrau/Documents/ITBA/20242C/InstruII/CABRA/Manual de usuario/compile
 d_output/main.aux
 LaTeX Info: Redefining \. on input line 12.
@@ -1156,18 +1160,14 @@ LaTeX Info: Redefining \% on input line 12.
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 436659AC0E29E1C0B6680EBCEAA35DFD;2385.
+(rerunfilecheck)             Checksum: 80E2CF6482867B8F51C86C9D95716D56;2708.
  ) 
 Here is how much of TeX's memory you used:
- 15423 strings out of 474222
- 250457 string characters out of 5748733
+ 15444 strings out of 474222
+ 250947 string characters out of 5748733
  1937975 words of memory out of 5000000
- 37411 multiletter control sequences out of 15000+600000
+ 37428 multiletter control sequences out of 15000+600000
  561161 words of font info for 47 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,11n,79p,545b,532s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1182,10 +1182,10 @@ lic/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/ams
 fonts/cm/cmti10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/
 cm/cmtt10.pfb>
 Output written on "/home/gonzagrau/Documents/ITBA/20242C/InstruII/CABRA/Manual 
-de usuario/compiled_output/main.pdf" (8 pages, 843554 bytes).
+de usuario/compiled_output/main.pdf" (9 pages, 869383 bytes).
 PDF statistics:
- 190 PDF objects out of 1000 (max. 8388607)
- 147 compressed objects within 2 object streams
- 32 named destinations out of 1000 (max. 500000)
- 135 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 210 PDF objects out of 1000 (max. 8388607)
+ 164 compressed objects within 2 object streams
+ 36 named destinations out of 1000 (max. 500000)
+ 156 words of extra memory for PDF output out of 10000 (max. 10000000)
 

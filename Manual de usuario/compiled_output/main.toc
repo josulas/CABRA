@@ -10,5 +10,7 @@
 \contentsline {subsection}{\numberline {3.2}Realización del estudio de audiometría}{6}{subsection.3.2}%
 \contentsline {subsubsection}{\numberline {3.2.1}Forma manual}{6}{subsubsection.3.2.1}%
 \contentsline {subsubsection}{\numberline {3.2.2}Forma automática (CABRASweep)}{8}{subsubsection.3.2.2}%
-\contentsline {section}{\numberline {4}Discusión}{8}{section.4}%
-\contentsline {section}{\numberline {5}Conclusión}{8}{section.5}%
+\contentsline {subsection}{\numberline {3.3}Ajuste de parámetros avanzados}{8}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Simulación}{9}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Archivos}{9}{section.4}%
+\contentsline {section}{\numberline {5}Conclusión}{9}{section.5}%
