@@ -1,0 +1,24 @@
+\section{Marco teórico} \label{marco_teorico}
+
+\subsection{Potencial evocado auditivo}
+
+El potencial evocado auditivo es una señal eléctrica generada por el tronco encefálico en respuesta a un estímulo auditivo.
+
+\subsection{Adquisición de la señal fisiológica}
+
+Para obtener una señal de potencial evocado auditivo mediante \textit{Auditory Brainstem Response} (ABR), se deben
+colocar tres electrodos en el paciente de la siguiente manera:
+
+\begin{itemize}
+    \item Electrodo de activo ($V_{in}^{+}$): en la frente del paciente.
+    \item Electrodo de tierra ($V_{in}^{-}$): en la apófisis mastoides ipsilateral del paciente.
+    \item Electrodo de referencia (neutro): en la apófisis mastoides contralateral del paciente.
+\end{itemize}
+
+La señal de ABR se obtiene midiendo la diferencia de potencial entre los electrodos $V_{in}^{+}$ y $V_{in}^{-}$, y
+tomando como referencia el electrodo neutro.
+Esta señal es particularmente ruidosa, y su amplitud es del orden de los 500 [nV]. Por ello, se la debe filtrar y
+amplificar analógicamente previo a su tratamiento digital \cite{shojaeemend_automated_2018}.
+Se suele utlizar un filtro pasabandas de 100 a 3000 [Hz] para eliminar ruido de baja y alta frecuencia.
+Para amplificar, como se explicará más adelante, se utilizará una combinación de amplificadores de instrumentación y
+amplificadores operacionales para lograr una ganancia total de 6500.
