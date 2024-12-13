@@ -1,0 +1,228 @@
+#include <Arduino.h>
+#include "driver/i2s_std.h"
+#include <math.h>
+#include "esp_adc/adc_oneshot.h"
+// #include "esp_adc/adc_continuous.h"
+
+// I2S Configuration
+#define I2S_BCK_IO          2   // Bit Clock
+#define I2S_WS_IO           15  // Word Select (LRC)
+#define I2S_DOUT_IO         4   // Data Out
+#define SAMPLE_RATE_AUDIO   48000
+#define DMA_BUFFER_SIZE     512
+#define RIGHT_EAR_PAD       0
+#define LEFT_EAR_PAD        1
+#define SILENCE             0
+#define MAXLEVEL            (1 << 29) // Due to technical limitations, the maximum level is 2^29 (should be 2^31)
+#define DB0LEVEL            (1 << 15) * 250
+#define F0                  250
+#define ALPHA               -1.2
+
+// Sampling configuration
+#define SAMPLERATE 16000 // Hz
+#define TIMERFREQUENCY 1000000 // Hz
+#define NSAMPLESPERBUFFER 128
+#define MAXSAMPLES 2000
+#define SERIALBAUD 115200
+#define READPIN 34
+
+// Task related variables
+TaskHandle_t sendTask;
+hw_timer_t *samplerTimer = NULL;
+
+// ADC related variables
+adc_oneshot_chan_cfg_t adc_config{
+  .atten = ADC_ATTEN_DB_12,
+  .bitwidth = ADC_BITWIDTH_13
+};
+adc_oneshot_unit_handle_t adc_handle;
+adc_oneshot_unit_init_cfg_t adc_init_cfg{
+  .unit_id = ADC_UNIT_2,
+  .clk_src = ADC_RTC_CLK_SRC_DEFAULT,
+  .ulp_mode = ADC_ULP_MODE_DISABLE
+};
+volatile uint16_t adcBuffer[MAXSAMPLES];
+volatile uint16_t adcBufferIdx = 0;
+volatile uint16_t sendBufferIdx = 0;
+volatile long n_samples = 0;
+volatile bool samplingComplete = false;
+char startSamplingFlag = 0;
+
+// click related variables
+size_t bytes_written;
+size_t samples_used;
+int32_t click_buffer[1024];
+i2s_chan_handle_t tx_handle;
+i2s_chan_config_t chan_cfg = {
+  .id = I2S_NUM_1,
+  .role = I2S_ROLE_MASTER,
+  .dma_desc_num = 6,
+  .dma_frame_num = DMA_BUFFER_SIZE,
+  .auto_clear = true,
+};
+/* Allocate a new TX channel and get the handle of this channel */
+i2s_std_config_t std_cfg = {
+    .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(SAMPLE_RATE_AUDIO),
+    .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO),
+    .gpio_cfg = {
+        .mclk = I2S_GPIO_UNUSED,
+        .bclk = GPIO_NUM_2,
+        .ws = GPIO_NUM_15,
+        .dout = GPIO_NUM_4,
+        .din = I2S_GPIO_UNUSED,
+        .invert_flags = {
+            .mclk_inv = false,
+            .bclk_inv = false,
+            .ws_inv = false,
+        },
+    },
+};
+
+double frequencies[] = {250, 500, 1000, 2000, 4000, 8000};
+long n_clicks, freq_idx, ear, level, click_duration, cycle_duration;
+double frequency, common_multiplier;
+uint32_t right_ear_multiplier, left_ear_multiplier;
+
+void IRAM_ATTR samplerTimerCB(){
+  if (adcBufferIdx < n_samples) {
+    // adcBuffer[adcBufferIdx] = analogRead(READPIN);
+    adc_oneshot_read(adc_handle, ADC_CHANNEL_4, (int *) (adcBuffer + adcBufferIdx));
+    adcBufferIdx = adcBufferIdx + 1;
+  } else {
+    samplingComplete = true;
+    timerStop(samplerTimer); // Stop the timer when sampling is complete
+  }
+}
+
+void sendDataTask(void *pvParameters){
+  for (;;){
+    vTaskSuspend(NULL);
+    Serial.write((uint8_t *) (adcBuffer + sendBufferIdx), NSAMPLESPERBUFFER * 2);
+    sendBufferIdx = sendBufferIdx + NSAMPLESPERBUFFER;
+  }
+}
+
+
+void setup(){
+  // Serial initialization
+  Serial.setTxBufferSize(2 * NSAMPLESPERBUFFER);
+  Serial.begin(SERIALBAUD);
+  if (!Serial) {
+    return;
+  }
+
+  // Pin configuration
+  pinMode(READPIN, INPUT);               // ADC pin
+
+  // ADC configuration
+  adc_oneshot_new_unit(&adc_init_cfg, &adc_handle);
+  adc_oneshot_config_channel(adc_handle, ADC_CHANNEL_4, &adc_config);
+  // adc_digi_pattern_config_t adc_pattern = {
+  //   .atten = ADC_ATTEN_DB_12,
+  //   .channel = ADC_CHANNEL_4,
+  //   .unit = ADC_UNIT_2,
+  //   .bit_width = ADC_BITWIDTH_13
+  // };
+  // adc_continuous_config_t adc_config = {
+  //   .pattern_num = 1,
+  //   .adc_pattern = &adc_pattern,
+  //   .sample_freq_hz = 20000,
+  //   .conv_mode = ADC_CONV_SINGLE_UNIT_2,
+  //   .format = ADC_DIGI_OUTPUT_FORMAT_TYPE2
+
+  // };
+  // adc_continuous_handle_t adc_handle;
+  // adc_continuous_handle_cfg_t adc_handle_cfg = {
+  //   .max_store_buf_size = 1024,
+  //   .conv_frame_size = SOC_ADC_DIGI_DATA_BYTES_PER_CONV * 128
+  // };
+  // adc_continuous_new_handle(&adc_handle_cfg, &adc_handle);
+  // adc_continuous_start(adc_handle);
+
+  // Create a task that will send the data to the Raspberry Pi
+  xTaskCreatePinnedToCore(
+    sendDataTask,   /* Function to implement the task */
+    "sendDataTask", /* Name of the task */
+    1000,  /* Stack size in words */
+    NULL,   /* Task input parameter */
+    0,      /* Priority of the task */
+    &sendTask,   /* Task handle. */
+    0);     /* Core where the task should run */
+
+  // Timer configuration
+  samplerTimer = timerBegin(TIMERFREQUENCY);    // 1 MHz
+  timerStop(samplerTimer);
+  timerAttachInterrupt(samplerTimer, &samplerTimerCB);
+
+  // I2S configuration
+  i2s_new_channel(&chan_cfg, &tx_handle, NULL);
+  i2s_channel_init_std_mode(tx_handle, &std_cfg);
+  i2s_channel_enable(tx_handle);
+}
+
+
+void loop(){
+  while(!Serial.available()) {}
+  // Receive the number of clicks, the frequency index, ear, the level in DB (all integers)
+  n_clicks = Serial.parseInt();
+  freq_idx = Serial.parseInt();
+  ear = Serial.parseInt();
+  level = Serial.parseInt();
+  click_duration = Serial.parseInt();
+  cycle_duration = Serial.parseInt();
+  Serial.read(); // Clear the buffer
+  n_samples = cycle_duration * SAMPLERATE / 1000;
+  samples_used = click_duration * SAMPLE_RATE_AUDIO / 1000;
+  ear % 2 == 0 ? right_ear_multiplier = MAXLEVEL : right_ear_multiplier = SILENCE;
+  ear % 3 == 0 ? left_ear_multiplier = MAXLEVEL : left_ear_multiplier = SILENCE;
+  frequency = frequencies[freq_idx];
+  common_multiplier = DB0LEVEL * pow(frequency / F0, ALPHA) * pow(10, level / 20);
+  ear % 2 == 0 ? right_ear_multiplier = 1 : right_ear_multiplier = SILENCE;
+  ear % 3 == 0 ? left_ear_multiplier = 1 : left_ear_multiplier = SILENCE;
+  for (int i = 0; i < samples_used; i++) {
+    float sample = sin(2.0 * M_PI * frequency * i / SAMPLE_RATE_AUDIO) * common_multiplier;
+    click_buffer[i * 2 + RIGHT_EAR_PAD] = (int32_t)(sample * right_ear_multiplier); 
+    click_buffer[i * 2 + LEFT_EAR_PAD] = (int32_t)(sample * left_ear_multiplier);
+  }
+  // Serial.printf("nclicks: %d, Click duration: %d, Cycle duration: %d, Frequency: %f, Level: %d, Ear: %d\n", n_clicks, click_duration, cycle_duration, frequency, level, ear);
+  // Serial.printf("Right ear multiplier: %d, Left ear multiplier: %d\n", right_ear_multiplier, left_ear_multiplier);
+  // Serial.printf("Common multiplier: %f\n", common_multiplier);
+  // Serial.printf("Samples used: %d\n", samples_used);
+  // Serial.printf("n_samples: %d\n", n_samples);
+  Serial.print("R"); // Ready to receive the start sampling flag
+  for(int i = 0; i < n_clicks; i++){
+    while(!Serial.available()) {}
+    Serial.readBytes(&startSamplingFlag, 1);
+    Serial.flush(); // Wait for the Serial to stop reading data
+    // Start sampling
+    timerRestart(samplerTimer);
+    timerAlarm(samplerTimer, (TIMERFREQUENCY / SAMPLERATE), true, 0);
+    timerStart(samplerTimer);
+    // Send the click
+    i2s_channel_write(tx_handle, click_buffer, samples_used * 2 * sizeof(uint32_t), &bytes_written, portMAX_DELAY);
+    if(bytes_written != samples_used * 2 * sizeof(uint32_t)){
+      Serial.println("Error writing to I2S");
+      ESP.restart();
+    }
+    // Wait for the sampling and sending to finish
+    while (!samplingComplete) {
+      if (adcBufferIdx >= sendBufferIdx + NSAMPLESPERBUFFER){
+        vTaskResume(sendTask);
+      }
+    }
+    // Send the remaining data
+    while(sendBufferIdx <= n_samples - NSAMPLESPERBUFFER){
+      Serial.write((uint8_t *) (adcBuffer + sendBufferIdx), NSAMPLESPERBUFFER * 2);
+      sendBufferIdx = sendBufferIdx + NSAMPLESPERBUFFER;
+    }
+    if (n_samples > sendBufferIdx){
+      Serial.write((uint8_t *) (adcBuffer + sendBufferIdx), (n_samples - sendBufferIdx) * 2);
+    }
+    // Serial.printf("ADC was sampled %d times\n", adcBufferIdx);
+    // Reset the variables
+    samplingComplete = false;
+    adcBufferIdx = 0;
+    sendBufferIdx = 0;
+    // n_samples = 0;
+  }
+}

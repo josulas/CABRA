@@ -5,7 +5,7 @@
 #define TIMERFREQUENCY 1000000 // Hz
 #define NSAMPLESPERBUFFER 128
 #define MAXSAMPLES 2000
-#define SERIALBAUD 960000
+#define SERIALBAUD 250000
 #define READPIN 13
 
 // Task related variables

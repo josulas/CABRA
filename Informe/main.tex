@@ -1,0 +1,66 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Configuración general de página
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[10pt,a4paper]{article}
+\textheight = 21cm
+\textwidth = 15cm
+\topmargin = -0.5 cm
+\oddsidemargin = 1cm
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Paquetes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath}
+\usepackage[utf8]{inputenx} % Permite introducir caracteres no ASCII
+\usepackage[spanish]{babel} % Hace que los títulos aparezcan en español
+\usepackage[pdftex]{graphicx} % uso de graficos en general
+\usepackage{subcaption} % poder poner dos graficos como parte de uno
+\usepackage{fancyhdr} % encabezado diferente para pag pares e impares
+\usepackage{enumerate} % Permite crear listas
+\usepackage{adjustbox}
+\usepackage{tabu}
+\usepackage{multicol} % Permite combinar columnas
+\usepackage{multirow} % Permite combinar filas
+\usepackage{colortbl} % Colorear celdas
+\usepackage{booktabs} % Bordes en tablas
+\usepackage{float} % Tablas y figuras flotantes
+\usepackage[tablename=Tabla]{caption} % Permite insertar pies de figuras y títulos de tabla
+\usepackage{booktabs}
+\usepackage{etoolbox} % Permite arreglar errores de ciertos comandos
+\usepackage[svgnames, table]{xcolor} % Colores a usar
+\usepackage{footnote} % Notas al pie
+\makesavenoteenv{tabular} % Permite insertar notas al pie en tablas
+\usepackage[colorlinks=true, linkcolor=black, citecolor=black, urlcolor=cyan]{hyperref} % Permite insertar hyperlinks
+\usepackage{url} % Corrige errores causados por la presencia de \, _ y otros caracteres en URLs
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Configuración del formato del doc.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\patchcmd{\thebibliography}{\section*{\refname}}{}{}{} % Inserta las referencias sin título
+\apptocmd{\sloppy}{\hbadness 10000\relax}{}{} % Evita un warning molesto en la bibliografía
+\captionsetup{hypcap=false} % Corrige un warning molesto al utilizar hyperref
+\AtBeginDocument{
+  \let\oldref\ref
+  \def\ref{\oldref*}} % Evita la creación de links en donde se llame al comando \ref
+\graphicspath{{figuras/}} % Ubicación de los gráficos
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\DeclareGraphicsExtensions{.png,.jpg,.jpeg} % extensiones de las imágenes
+\setlength{\parindent}{0.25in}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Incluimos el contenido
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\input{00-caratula}
+\tableofcontents
+\newpage
+\input{01-introduccion}
+\input{02-materiales_y_metodos}
+\input{03-resultados}
+\input{04-discusion}
+\input{05-conclusion}
+\input{06-anexos}
+\input{07-bibliografia}
+
+\end{document}
