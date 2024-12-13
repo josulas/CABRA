@@ -13,7 +13,7 @@ from clicker import Clicker, EarSelect
 
 # Board parameters
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
-BAUDRATE = 250_000  # (MUST BE THE SAME AS IN THE ESP32 CODE)
+BAUDRATE = 960_000  # (MUST BE THE SAME AS IN THE ESP32 CODE)
 NUMBER_OF_BAUDS_PER_BIT = 10 # (DO NOT CHANGE)
 SAMPLINGRATE = 16_000 # Hz (MUST BE THE SAME AS IN THE ESP32 CODE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
@@ -82,6 +82,11 @@ class ESPSerial:
         self.buffersize = buffersize
         self.bytessample = bytessample
         self.nclicks = None
+        self.freq_index = None
+        self.ear = None
+        self.click_dbamp = None
+        self.click_duration = None
+        self.cycle_duration = None
         self.nsamples_per_click = None
         self.waitingtime = None
         self.serial = None
@@ -137,9 +142,14 @@ class ESPSerial:
                                         output='sos')
         return bandpass_iir
     
-    def set_serial(self, nclicks: int, cycle_duration: int):
+    def set_serial(self, nclicks: int, freq_idx: int, ear: int, click_dbamp: int, click_duration: int, cycle_duration: int):
         if self.port is not None:
             self.nclicks = nclicks
+            self.freq_index = freq_idx
+            self.ear = ear
+            self.click_dbamp = click_dbamp
+            self.click_duration = click_duration
+            self.cycle_duration = cycle_duration
             self.nsamples_per_click = int(np.ceil(cycle_duration * SAMPLINGRATE / 1000.0))
             if self.nsamples_per_click > MAXNSAMPLES:
                 raise ValueError(F"Number of samples per click should be less than {MAXNSAMPLES}, got {self.nsamples_per_click} instead.")
@@ -175,9 +185,9 @@ class ESPSerial:
         self.clicker.saveToneBurst(TEMP_WAV_FILE)
         send_command(self.player, TEMP_WAV_FILE, "U")
         send_command(self.player, "L", "D")
+        self.serial.read(self.serial.inWaiting())
         data = []
         for _ in range(self.nclicks):
-            self.serial.read(self.serial.inWaiting())
             self.serial.write(f"{self.nsamples_per_click}".encode())
             send_command(self.player, "P", "S")
             self.serial.write("S".encode())
@@ -312,7 +322,7 @@ def main():
                                   samplingrate=48_000)
                 laptop_serial.set_clicker(clicker)
                 try:
-                    laptop_serial.set_serial(nclicks, cycle_duration)
+                    laptop_serial.set_serial(nclicks, freq_index, ear, click_dbamp, click_duration, cycle_duration)
                     laptop_serial.record_data()
                 except RuntimeError:
                     sys.stderr.write('2')
