@@ -15,8 +15,8 @@ SAMPLINGRATE = 8_000
 
 # Player parameters
 # Path to the C executable
-PLAYER_PATH_WINDOWS = "audio_playback.exe"
-PLAYER_PATH_LINUX = "./audio_playback_linux"
+PLAYER_PATH_WINDOWS = r"./audio_playback_windows/audio_playback.exe"
+PLAYER_PATH_LINUX = r"./audio_playback_linux"
 TEMP_FILE = "~.wav"
 
 class Actions:
@@ -80,7 +80,7 @@ class Simulator:
         self.clicker.saveToneBurst(TEMP_FILE)
         self.send_command(TEMP_FILE, "U")
         self.send_command("L", "D")
-        response = self.send_command("S", "F")
+        response = self.send_command("P", "S")
         if not response:
             raise ValueError("Error in the player")
         # Simulate recording by sleeping while the audio plays

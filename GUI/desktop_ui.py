@@ -42,7 +42,7 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
     valid_amplitudes = list(range(-10, 45, 5))
 
     # Process paths for every mode
-    process_paths = {'simulation': 'simserial.py', 'CABRA device': 'desktop_serial.py'}
+    process_paths = {'simulation': 'sim_serial.py', 'CABRA device': 'desktop_serial.py'}
 
     def __init__(self):
         # Initial setup
