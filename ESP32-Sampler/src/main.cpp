@@ -1,166 +1,100 @@
-#include <arduino.h>
-// #include "freertos/semphr.h"
+#include <Arduino.h>
 
 // defines
-#define SAMPLERATE 10000 // Hz
-#define BUFFERSIZE 128 // 128 samples of 2 bytes each, 256 bytes in total
-#define INTERRUPT_PIN 2
-#define RXD2 16
-#define TXD2 17
-#define DEBUGSERIALBAUD 115200
-#define TRANSMISSIOSERIALBAUD 960000
-#define READPIN 4
+#define SAMPLERATE 16000 // Hz
+#define TIMERFREQUENCY 1000000 // Hz
+#define NSAMPLESPERBUFFER 128
+#define MAXSAMPLES 2000
+#define SERIALBAUD 960000
+#define READPIN 13
 
 // Task related variables
 TaskHandle_t sendTask;
 hw_timer_t *samplerTimer = NULL;
-volatile bool sampling_done = false;
 
 // ADC related variables
-volatile bool bufferA = true;
-volatile uint16_t adcBufferA[BUFFERSIZE];
-volatile uint16_t adcBufferB[BUFFERSIZE];
-volatile uint buffersSent = 0;
-volatile uint adcRead = 0;
+volatile uint16_t adcBuffer[MAXSAMPLES];
 volatile uint16_t adcBufferIdx = 0;
-volatile uint16_t readVal = 0;
+volatile uint16_t sendBufferIdx = 0;
 volatile long n_samples = 0;
-
-
-void sendBuffer(){
-  // Choose the right bufffer, which is not in use by the ADC
-  if (!bufferA){
-    // Send the buffer to the Raspberry Pi
-    Serial2.write((uint8_t *) adcBufferA, BUFFERSIZE * 2);
-    // Make sure everything is received
-    // Serial2.flush();
-
-  }
-  else{
-    // Send the buffer to the Raspberry Pi
-    Serial2.write((uint8_t *) adcBufferB, BUFFERSIZE * 2);
-    // Make sure everything is received
-    // Serial2.flush();
-  }
-}
-
-
-void readADC(){
-  // Read ADC value and write it to the SD card
-  readVal = analogRead(READPIN);
-  if (bufferA){
-    adcBufferA[adcBufferIdx++] = readVal;
-  }
-  else{
-    adcBufferB[adcBufferIdx++] = readVal;
-  }
-  if (adcBufferIdx == BUFFERSIZE){
-    bufferA = !bufferA;
-    adcBufferIdx = 0;
-    vTaskResume(sendTask);
-  }
-}
-
+volatile bool samplingComplete = false;
+char startSamplingFlag = 0;
 
 void IRAM_ATTR samplerTimerISER(){
-  if (adcRead >= n_samples){
-    timerAlarmDisable(samplerTimer);
-    sampling_done = true;
-  }
-  else {
-    adcRead++;
-    readADC();
+  if (adcBufferIdx < n_samples) {
+    adcBuffer[adcBufferIdx] = analogRead(READPIN);
+    adcBufferIdx = adcBufferIdx + 1;
+  } else {
+    samplingComplete = true;
+    timerStop(samplerTimer); // Stop the timer when sampling is complete
   }
 }
-
-
-void IRAM_ATTR startSampling(){
-    timerRestart(samplerTimer);
-    timerAlarmEnable(samplerTimer);
-}
-
 
 void sendDataTask(void *pvParameters){
   for (;;){
     vTaskSuspend(NULL);
-    sendBuffer();
-    buffersSent++;
+    Serial.write((uint8_t *) (adcBuffer + sendBufferIdx), NSAMPLESPERBUFFER * 2);
+    sendBufferIdx = sendBufferIdx + NSAMPLESPERBUFFER;
   }
 }
 
 
 void setup(){
   // Pin configuration
-  pinMode(INTERRUPT_PIN, INPUT_PULLUP);    // Interrupt pin
   pinMode(READPIN, INPUT);               // ADC pin
 
-  // Serial for control and logging
-  Serial.begin(DEBUGSERIALBAUD);
+  // Serial initialization
+  Serial.setTxBufferSize(2 * NSAMPLESPERBUFFER);
+  Serial.begin(SERIALBAUD);
   if (!Serial) {
     return;
   }
-
-  // Serial for sending data
-  Serial2.begin(TRANSMISSIOSERIALBAUD, SERIAL_8N1, RXD2, TXD2);
-  if (!Serial2) {
-    Serial.println("Error: Transmission serial connection not initialized.");
-    return;
-  }
-  
-  // Timer configuration
-  samplerTimer = timerBegin(0, 80, true);    // 80 MHz / 800 = 1 MHz
-  timerAttachInterrupt(samplerTimer, &samplerTimerISER, true);
-  timerAlarmWrite(samplerTimer, (1000000 / SAMPLERATE), true); 
-
-  // ADC configuration
-  // analogSetAttenuation(ADC_0db);
 
   // Create a task that will send the data to the Raspberry Pi
   xTaskCreatePinnedToCore(
     sendDataTask,   /* Function to implement the task */
     "sendDataTask", /* Name of the task */
-    10000,  /* Stack size in words */
+    1000,  /* Stack size in words */
     NULL,   /* Task input parameter */
     0,      /* Priority of the task */
     &sendTask,   /* Task handle. */
     0);     /* Core where the task should run */
-  
+
+  // Timer configuration
+  samplerTimer = timerBegin(TIMERFREQUENCY);    // 1 MHz
+  timerStop(samplerTimer);
+  timerAttachInterrupt(samplerTimer, &samplerTimerISER);
 }
 
 
 void loop(){
-  Serial.println("Waiting for number of samples.");
-  Serial.flush();
-  while(!Serial2.available()){}
-  n_samples = Serial2.parseInt();
-  Serial2.flush();
-  // Wait for the serial to stop reading data
-  // Inform the user the board is ready
-  Serial.println("Waiting for interruption.");
-  Serial.flush();
-  Serial.end();
-  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), startSampling, RISING);
-  // For logging purposes
-  adcRead = 0;
-  buffersSent = 0;
-  // Reset everything needed for the burst
-  sampling_done = false;
-  adcBufferIdx = 0;
-  bufferA = true;
+  while(!Serial.available()) {}
+  n_samples = Serial.parseInt();
+  while(!Serial.available()) {}
+  Serial.readBytes(&startSamplingFlag, 1);
+  Serial.flush(); // Wait for the Serial to stop reading data
+  // Start sampling
+  timerRestart(samplerTimer);
+  timerAlarm(samplerTimer, (TIMERFREQUENCY / SAMPLERATE), true, 0);
+  timerStart(samplerTimer);
   // Wait for the sampling and sending to finish
-  while (!sampling_done) {}
-  // Disable interruption
-  // detachInterrupt(INTERRUPT_PIN);
-  // Send the last buffer, if it is not empty
-  if (adcBufferIdx > 0){
-    bufferA = !bufferA;
-    sendBuffer();
-    buffersSent++;
+  while (!samplingComplete) {
+    if (adcBufferIdx >= sendBufferIdx + NSAMPLESPERBUFFER){
+      vTaskResume(sendTask);
+    }
   }
-  detachInterrupt(INTERRUPT_PIN);
-  // Re-enable control serial communication
-  Serial.begin(DEBUGSERIALBAUD);
-  // Print log
-  Serial.printf("Burst done. The ADC was called %d times and %d buffers were sent.\n", adcRead, buffersSent);
-  // ESP.restart();
+  // Send the remaining data
+  while(sendBufferIdx <= n_samples - NSAMPLESPERBUFFER){
+    Serial.write((uint8_t *) (adcBuffer + sendBufferIdx), NSAMPLESPERBUFFER * 2);
+    sendBufferIdx = sendBufferIdx + NSAMPLESPERBUFFER;
+  }
+  if (n_samples > sendBufferIdx){
+    Serial.write((uint8_t *) (adcBuffer + sendBufferIdx), (n_samples - sendBufferIdx) * 2);
+  }
+  // Serial.printf("ADC was sampled %d times\n", adcBufferIdx);
+  // Reset the variables
+  samplingComplete = false;
+  adcBufferIdx = 0;
+  sendBufferIdx = 0;
+  n_samples = 0;
 }
