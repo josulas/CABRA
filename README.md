@@ -34,9 +34,9 @@ Para no tener que instalar todos los paquetes requeridos, se recomienda utilizar
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="33%"><a href="https://github.com/gonzagrau"><img src="https://avatars.githubusercontent.com/u/107513203?v=4" width="100px;" alt="Gonzalo Andrés Grau"/><br /><sub><b>Gonzalo Andrés Grau</b></sub></a><br/></td>
-      <td align="center" valign="top" width="33%"><a href="https://github.com/Lucasfranzi"><img src="https://avatars.githubusercontent.com/u/107051293?v=4" width="100px;" alt="Lucas Franzi"/><br /><sub><b>Lucas Franzi</b></sub></a><br /></td>
-      <td align="center" valign="top" width="33%"><a href="https://github.com/josulas"><img src="https://avatars.githubusercontent.com/u/89985451?v=4" width="100px;" alt="Josue Francisco Laszeski"/><br /><sub><b>Josue Francisco Laszeski</b></sub></a><br /></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/gonzagrau"><img src="https://avatars.githubusercontent.com/u/107513203?v=4" width="200px;" alt="Gonzalo Andrés Grau"/><br /><sub><b>Gonzalo Andrés Grau</b></sub></a><br/></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/Lucasfranzi"><img src="https://avatars.githubusercontent.com/u/107051293?v=4" width="200px;" alt="Lucas Franzi"/><br /><sub><b>Lucas Franzi</b></sub></a><br /></td>
+      <td align="center" valign="top" width="33%"><a href="https://github.com/josulas"><img src="https://avatars.githubusercontent.com/u/89985451?v=4" width="200px;" alt="Josue Francisco Laszeski"/><br /><sub><b>Josue Francisco Laszeski</b></sub></a><br /></td>
     </tr>
   </tbody>
 </table>
