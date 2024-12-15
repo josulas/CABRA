@@ -167,7 +167,8 @@ def main():
                 out_path = EVOKED_PATH if click_dbamp >= audio_limit else NOISE_PATH
                 n_reps = np.random.randint(nclicks//2, nclicks)
                 msg = f"{out_path};{n_reps}"
-                sys.stdout.write(msg)
+                # sys.stdout.write(msg)
+                sys.stdout.write("saved_data\\8000Hz_2024-12-11_16-02-33.npy;283")
                 sys.stdout.flush()
             case Actions.RESET:
                 pass

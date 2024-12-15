@@ -25,7 +25,7 @@ from inference_system import find_wave_v, threshold_detection
 
 OUTPUT_DIR = 'saved_audiometries'
 PEAK_TO_PEAK_EVOKED = 1000  # [nV]
-DEFAULT_NCLICKS = 500
+DEFAULT_NCLICKS = 300
 DEFAULT_CLICK_DURATION = 10
 DEFAULT_CYCLE_DURATION = 30
 

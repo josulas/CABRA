@@ -21,7 +21,7 @@ class EarSelect(object):
 
 class Clicker(object):
     F0 = 250 # Frequency of the click at whick NDB0VALF0 is defined
-    NDB0VALF0 = 250 * 2 ** 15 # ndB value for 0 amplitude at F0
+    NDB0VALF0 = 200 * 2 ** 16 # ndB value for 0 amplitude at F0
     ALFA = -1.2
     MAXINT = 2**31 - 1 # Maximum value 
     

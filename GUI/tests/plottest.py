@@ -25,21 +25,26 @@ def main():
     print('Valid paths:') 
     print(path_str)
 
-    while not done:
-        choice = input('Select path: ')
-        try:
-            path = paths[int(choice)]
-            print(f"You chose: {path}")
-            data = np.load(os.path.join(base_dir, path))
-            done = True
-        except (FileNotFoundError, ValueError):
-            print('Invalid file. Try again')
-
-    print(data.shape)
+    user_wants_to_continue = True
     app = QApplication(sys.argv)
-    window = MainWindow(data)
-    window.show()
-    app.exec()
+    while user_wants_to_continue:
+        done = False
+        while not done:
+            choice = input('Select path: ')
+            try:
+                path = paths[int(choice)]
+                print(f"You chose: {path}")
+                data = np.load(os.path.join(base_dir, path))
+                done = True
+            except (FileNotFoundError, ValueError):
+                print('Invalid file. Try again')
+
+        print(data.shape)
+        window = MainWindow(data)
+        window.show()
+        app.exec()
+        print('Do you want to continue?')
+        user_wants_to_continue = input('Y/n: ') != 'n'
 
 if __name__ == '__main__':
     main()
