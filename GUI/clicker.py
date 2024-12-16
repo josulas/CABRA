@@ -3,6 +3,7 @@ import numpy as np
 import wave
 
 
+
 NCLICKS = 2000  
 CYCLE_DURATION = 30 # ms (including pause)
 CLICK_DURATION = 10 # ms
@@ -126,8 +127,8 @@ hh
 
 if __name__ == "__main__":
     import os
-    clicker = Clicker(freq=1000, nclicks=1, ear=EarSelect.LEFT, dbamp=10, click_duration=10, cycle_duration=15, samplingrate=48000)
-    clicker.playToneBurst()
+    clicker = Clicker(freq=1000, nclicks=100, ear=EarSelect.LEFT, dbamp=20, click_duration=10, cycle_duration=30, samplingrate=48000)
+    clicker.playToneBurst(False)
     clicker.saveToneBurst('~.wav')
     input()
     os.remove('~.wav')

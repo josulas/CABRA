@@ -9,11 +9,12 @@ import numpy as np
 import scipy.signal as signal
 from average_eeg import average_EEG
 from clicker import Clicker, EarSelect
+import matplotlib.pyplot as plt
 
 
 # Board parameters
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
-BAUDRATE = 960_000  # (MUST BE THE SAME AS IN THE ESP32 CODE)
+BAUDRATE = 500_000  # (MUST BE THE SAME AS IN THE ESP32 CODE)
 NUMBER_OF_BAUDS_PER_BIT = 10 # (DO NOT CHANGE)
 SAMPLINGRATE = 12_000 # Hz (MUST BE THE SAME AS IN THE ESP32 CODE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
@@ -21,11 +22,11 @@ NSAMPLESPERBUFFER = 128 # (MUST BE THE SAME AS IN THE ESP32 CODE)
 MAXNSAMPLES = 2_000 # (MUST BE THE SAME AS IN THE ESP32 CODE)
 ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
 QUANTIZATION = 2 ** ADCRESOLUTION
-ADCMAX = 3.1  # V
+ADCMAX = 3.2  # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 40 #e-6
-GAIN = 50 * 390 / (8 / 3.1)
+THRESHOLDV = 40e-6
+GAIN = 50 * 390 * 0.4
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 OUTPUT_DIR = 'saved_data'
 SERIAL_RECOGNIZER = "USB to UART Bridge"
@@ -55,7 +56,7 @@ class ESPSerial:
                  sampling_rate: int = SAMPLINGRATE,
                  buffersize: int = SAMPLINGRATE,
                  bytessample: int = BYTESPERSAMPLE,
-                 alpha_s: int = 40,
+                 alpha_s: int = 45,
                  delta_f: int = 10,
                  f_pass: int = 150,
                  f_stop: int = 3000,
@@ -137,7 +138,7 @@ class ESPSerial:
         """
         bandpass_iir = signal.iirdesign([self.f_pass, self.f_stop],
                                         [self.f_pass - self.delta_f, self.f_stop + self.delta_f],
-                                        gpass=1, gstop = self.alpha_s,
+                                        gpass=0.1, gstop = self.alpha_s,
                                         fs=self.sampling_rate,
                                         output='sos')
         return bandpass_iir
@@ -183,10 +184,10 @@ class ESPSerial:
         max_transmission_errors = int(self.nclicks * .05)
         transmission_errors = 0
         self.clicker.saveToneBurst(TEMP_WAV_FILE)
+        data = []
         send_command(self.player, TEMP_WAV_FILE, "U")
         send_command(self.player, "L", "D")
         self.serial.read(self.serial.inWaiting())
-        data = []
         for _ in range(self.nclicks):
             self.serial.write(f"{self.nsamples_per_click}".encode())
             send_command(self.player, "P", "S")
@@ -201,10 +202,17 @@ class ESPSerial:
                     raise RuntimeError(F"Serial read timed out before receiving all data. Expected {self.nsamples_per_click} bytes, got {len(binary_data)} bytes.")
             else:
                 data.append(np.frombuffer(binary_data, dtype=np.uint16).astype(np.float64))
-            time.sleep(0.012) # Avoids glitches in the clicks
+            finished = self.player.stdout.readline().strip()
+            if finished != "F":
+                raise RuntimeError("Playback did not finish correctly")
+            time.sleep(0.01) # Avoids glitches in the clicks
         data = np.array(data)
         if len(data):
+            print(data.min(), data.max())
+            plt.plot(np.mean(data, axis=0))
+            plt.show()
             data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
+            print(data.min(), data.max())
             self.data =  data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
         else:
             self.data = data

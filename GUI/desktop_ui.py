@@ -340,6 +340,13 @@ class CABRA_Window(Ui_MainWindow, QMainWindow):
         self.pushNOISE.setEnabled(True)
         # Extract features
         self.evoked_signal = np.load(self.filepath)
+        
+        if len(self.evoked_signal) == 0:
+            self.labelStatus.setText("No data recorded. Please try again.")
+            self.reset_stop_button_to_run()
+            self.pushCABRASweep.setEnabled(True)
+            return
+        
         self.wave_features = find_wave_v(self.evoked_X_axis, self.evoked_signal, plot=False)
         # Check if the sound was perceived
         perceived = threshold_detection(self.wave_features)

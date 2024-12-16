@@ -56,9 +56,14 @@ def find_wave_v(t_arr: np.ndarray,
         next_peak_idx = peaks[1] + idx_peak + 1
     except IndexError:
         next_peak_idx = idx_max
-    wave_start_peak = np.argmin(original_signal[idx_min: idx_peak]) + idx_min
-    wave_end_peak = np.argmin(original_signal[idx_peak: next_peak_idx]) + idx_peak
-
+    
+    try:
+        wave_start_peak = np.argmin(original_signal[idx_min: idx_peak]) + idx_min
+        wave_end_peak = np.argmin(original_signal[idx_peak: next_peak_idx]) + idx_peak
+    except ValueError:
+        wave_start_peak = idx_min
+        wave_end_peak = idx_max
+        
     features = {'peak_amplitude': amp_peak, 'amplitude_range': amp_range,
                 'peak_time': t_arr[idx_peak], 'peak_index': idx_peak,
                 'wave_start_time': t_arr[wave_start_peak], 'wave_start_index': wave_start_peak,

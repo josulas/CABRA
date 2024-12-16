@@ -451,11 +451,21 @@ HRESULT PlayAudioStream(WavAudioSource *pMySource)
         return hr;
     }
 
+    // Explicitly reset the audio client
+    hr = pAudioClient->Reset();
+    if (FAILED(hr)){
+        safeExit();
+        return hr;
+    }
+
     // Reset the thread priority back to normal.
     AvRevertMmThreadCharacteristics(hTask);
 
     // Reset the audio source.
     pMySource->Reset();
+
+    printf("F\n"); // Start signal
+    fflush(stdout);
 
     return hr; // S_OK
 }
