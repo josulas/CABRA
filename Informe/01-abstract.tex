@@ -1,34 +1,14 @@
 \section{Abstract} \label{abstract}
 
-Este trabajo describe el diseño e implementación de un sistema automatizado de audiometría computarizada basado en
-la detección y análisis de potenciales evocados auditivos.
+Este trabajo describe el diseño e implementación de un sistema automatizado de audiometría computarizada basado en la detección y análisis de potenciales evocados auditivos.
 
-El estudio de audiometría busca detectar los umbrales de amplitud sonora a partir de los cuales un sonido es
-perceptible para un paciente ante diferentes frecuencias de sonido.
-Para ello, se generan estímulos auditivos correspondientes a frecuencias específicas, a diferentes amplitudes, hasta
-encontrar el punto umbral.
-Técnicas más avanzadas implican el análisis de potenciales evocados auditivos para automatizar la detección de
-dichos límites.
-Se investigó acerca de los productos más utilizados para realizar este tipo de estudios, y se encontró que los
-dispositivos comerciales disponibles son de un elevado costo, además de que no existen alternativas de producción
-nacional.
+El estudio de audiometría busca detectar los umbrales de amplitud a partir de los cuales las vías de conducción sonora primarias de un paciente responden a un sonido a una determinada frecuencia. Para ello, se generan estímulos sonoros correspondientes a frecuencias específicas, a diferentes amplitudes, hasta encontrar el umbral a partir del cual se observa una respuesta neurofisiológica tipificada. Técnicas más avanzadas implican el análisis de potenciales evocados auditivos para automatizar la detección de dichos límites. Se investigó acerca de los productos más utilizados para realizar este tipo de estudios, y se encontró que los dispositivos comerciales disponibles son de un elevado costo, además de que no existen alternativas de producción nacional.
 
-Nuestro proyecto, CABRA (Computer Automated Brainstem Response Audiometry), tiene como objetivo realizar audiometrías
-basadas en análisis de potenciales evocados auditivos del tronco encefálico a un bajo costo.
-Para ello, se diseñó un sistema de hardware basado en un microcontrolador ESP32-S2, el cual recibe una señal
-proveniente del tronco encefálico del paciente (mediante electrodos colocados superficialmente), previamente
-filtrada y amplificada, y la digitaliza para su posterior procesamiento.
-Luego, las señales recibidas son procesadas digitalmente por un software de escritorio, el cual se encarga de
-realizar el estudio completo de audiometría (generando los estímulos auditivos correspondientes) analizando las
-señales fisiológicas obtenidas.
+Nuestro proyecto, CABRA (Computer Automated Brainstem Response Audiometry), tiene como objetivo realizar,  a un bajo costo, audiometrías basadas en análisis de potenciales evocados auditivos del tronco encefálico.
+Para ello, se diseñó un sistema de hardware basado en un microcontrolador ESP32-S2, el cual recibe una señal del paciente (mediante electrodos colocados superficialmente), previamente filtrada y amplificada, y la digitaliza para su posterior análisis. Luego, las señales recibidas son procesadas digitalmente por un software de escritorio, el cual se encarga de
+realizar el estudio completo de audiometría, generando los estímulos auditivos correspondientes y analizando las señales fisiológicas obtenidas.
 
-Este sistema es modular, amigable al usuario, rápido, y ampliamente configurable.
-Además de proveer una herramienta para evaluar la integridad de las vías auditivas del paciente, CABRA permite
-acelerar el estudio de audiometría al guiar al usuario en la búsqueda de los umbrales de percepción mediante un
-sistema experto.
+Este sistema es modular, amigable al usuario, rápido y ampliamente configurable. Además de proveer una herramienta para evaluar la integridad de las vías auditivas del paciente, CABRA permite acelerar el estudio de audiometría al guiar al usuario en la búsqueda de los umbrales de percepción mediante un sistema experto.
 
-A futuro, como posibles mejoras, podría modificarse el sistema de adquisición de señales, junto con el de generación
-de estímulos, para disminuir la latencia en el muestreo.
-Con respecto al software, el sistema experto podría optimizarse mediante algoritmos de machine learning.
-Además, la presentación de la carcasa podría ser más compacta y ergonómica.
+Como posibles mejoras a futuro, se plantea la modificación del sistema de adquisición de señales y de generación de estímulos, debido a que actualmente cuentan con latencias que disminuyen la velocidad y calidad de cada prueba. Con respecto al software, el sistema experto presenta la posibilidad de optimizarse mediante algoritmos de Machine Learning. Finalmente, se propone la optimización en espacio del producto, con miras hacia una carcasa más compacta y ergonómica.
 

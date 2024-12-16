@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2024.8.27)  12 DEC 2024 23:37
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2024.8.27)  15 DEC 2024 20:44
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1023,10 +1023,276 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip70
 )
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.tex
+\pgfutil@everybye=\toks35
+\pgfutil@tempdima=\dimen270
+\pgfutil@tempdimb=\dimen271
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-latex.def
+\pgfutil@abb=\box110
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfrcs.code.tex
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/pgf.revision.tex)
+Package: pgfrcs 2023-01-15 v3.1.10 (3.1.10)
+))
+Package: pgf 2023-01-15 v3.1.10 (3.1.10)
+
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgfcore.sty
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/systemlayer/pgfsys.sty
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys.code.tex
+Package: pgfsys 2023-01-15 v3.1.10 (3.1.10)
+
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex
+\pgfkeys@pathtoks=\toks36
+\pgfkeys@temptoks=\toks37
+
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeyslibraryfiltered
+.code.tex
+\pgfkeys@tmptoks=\toks38
+))
+\pgf@x=\dimen272
+\pgf@y=\dimen273
+\pgf@xa=\dimen274
+\pgf@ya=\dimen275
+\pgf@xb=\dimen276
+\pgf@yb=\dimen277
+\pgf@xc=\dimen278
+\pgf@yc=\dimen279
+\pgf@xd=\dimen280
+\pgf@yd=\dimen281
+\w@pgf@writea=\write3
+\r@pgf@reada=\read3
+\c@pgf@counta=\count318
+\c@pgf@countb=\count319
+\c@pgf@countc=\count320
+\c@pgf@countd=\count321
+\t@pgf@toka=\toks39
+\t@pgf@tokb=\toks40
+\t@pgf@tokc=\toks41
+\pgf@sys@id@count=\count322
+ (/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgf.cfg
+File: pgf.cfg 2023-01-15 v3.1.10 (3.1.10)
+)
+Driver file for pgf: pgfsys-pdftex.def
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-pdftex.def
+File: pgfsys-pdftex.def 2023-01-15 v3.1.10 (3.1.10)
+
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-common-pdf.de
+f
+File: pgfsys-common-pdf.def 2023-01-15 v3.1.10 (3.1.10)
+)))
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsyssoftpath.code.
+tex
+File: pgfsyssoftpath.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgfsyssoftpath@smallbuffer@items=\count323
+\pgfsyssoftpath@bigbuffer@items=\count324
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsysprotocol.code.
+tex
+File: pgfsysprotocol.code.tex 2023-01-15 v3.1.10 (3.1.10)
+))
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcore.code.tex
+Package: pgfcore 2023-01-15 v3.1.10 (3.1.10)
+
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathutil.code.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathparser.code.tex
+\pgfmath@dimen=\dimen282
+\pgfmath@count=\count325
+\pgfmath@box=\box111
+\pgfmath@toks=\toks42
+\pgfmath@stack@operand=\toks43
+\pgfmath@stack@operation=\toks44
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.code.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.basic.code
+.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.trigonomet
+ric.code.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.random.cod
+e.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.comparison
+.code.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.base.code.
+tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.round.code
+.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.misc.code.
+tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.integerari
+thmetics.code.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathcalc.code.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfloat.code.tex
+\c@pgfmathroundto@lastzeros=\count326
+))
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfint.code.tex)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepoints.code.te
+x
+File: pgfcorepoints.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgf@picminx=\dimen283
+\pgf@picmaxx=\dimen284
+\pgf@picminy=\dimen285
+\pgf@picmaxy=\dimen286
+\pgf@pathminx=\dimen287
+\pgf@pathmaxx=\dimen288
+\pgf@pathminy=\dimen289
+\pgf@pathmaxy=\dimen290
+\pgf@xx=\dimen291
+\pgf@xy=\dimen292
+\pgf@yx=\dimen293
+\pgf@yy=\dimen294
+\pgf@zx=\dimen295
+\pgf@zy=\dimen296
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathconstruct.
+code.tex
+File: pgfcorepathconstruct.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgf@path@lastx=\dimen297
+\pgf@path@lasty=\dimen298
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathusage.code
+.tex
+File: pgfcorepathusage.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgf@shorten@end@additional=\dimen299
+\pgf@shorten@start@additional=\dimen300
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorescopes.code.te
+x
+File: pgfcorescopes.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgfpic=\box112
+\pgf@hbox=\box113
+\pgf@layerbox@main=\box114
+\pgf@picture@serial@count=\count327
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoregraphicstate.c
+ode.tex
+File: pgfcoregraphicstate.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgflinewidth=\dimen301
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransformation
+s.code.tex
+File: pgfcoretransformations.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgf@pt@x=\dimen302
+\pgf@pt@y=\dimen303
+\pgf@pt@temp=\dimen304
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorequick.code.tex
+File: pgfcorequick.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreobjects.code.t
+ex
+File: pgfcoreobjects.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathprocessing
+.code.tex
+File: pgfcorepathprocessing.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorearrows.code.te
+x
+File: pgfcorearrows.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgfarrowsep=\dimen305
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreshade.code.tex
+File: pgfcoreshade.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgf@max=\dimen306
+\pgf@sys@shading@range@num=\count328
+\pgf@shadingcount=\count329
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreimage.code.tex
+File: pgfcoreimage.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreexternal.code.
+tex
+File: pgfcoreexternal.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgfexternal@startupbox=\box115
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorelayers.code.te
+x
+File: pgfcorelayers.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransparency.c
+ode.tex
+File: pgfcoretransparency.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepatterns.code.
+tex
+File: pgfcorepatterns.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorerdf.code.tex
+File: pgfcorerdf.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)))
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmoduleshapes.code.tex
+File: pgfmoduleshapes.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgfnodeparttextbox=\box116
+) (/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmoduleplot.code.tex
+File: pgfmoduleplot.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-0-65
+.sty
+Package: pgfcomp-version-0-65 2023-01-15 v3.1.10 (3.1.10)
+\pgf@nodesepstart=\dimen307
+\pgf@nodesepend=\dimen308
+)
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-1-18
+.sty
+Package: pgfcomp-version-1-18 2023-01-15 v3.1.10 (3.1.10)
+)) (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgffor.sty
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfkeys.sty
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex))
+(/usr/share/texlive/texmf-dist/tex/latex/pgf/math/pgfmath.sty
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex))
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgffor.code.tex
+Package: pgffor 2023-01-15 v3.1.10 (3.1.10)
+\pgffor@iter=\dimen309
+\pgffor@skip=\dimen310
+\pgffor@stack=\toks45
+\pgffor@toks=\toks46
+))
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/tikz.code.tex
+Package: tikz 2023-01-15 v3.1.10 (3.1.10)
+
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/libraries/pgflibraryplothandlers
+.code.tex
+File: pgflibraryplothandlers.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgf@plot@mark@count=\count330
+\pgfplotmarksize=\dimen311
+)
+\tikz@lastx=\dimen312
+\tikz@lasty=\dimen313
+\tikz@lastxsaved=\dimen314
+\tikz@lastysaved=\dimen315
+\tikz@lastmovetox=\dimen316
+\tikz@lastmovetoy=\dimen317
+\tikzleveldistance=\dimen318
+\tikzsiblingdistance=\dimen319
+\tikz@figbox=\box117
+\tikz@figbox@bg=\box118
+\tikz@tempbox=\box119
+\tikz@tempbox@bg=\box120
+\tikztreelevel=\count331
+\tikznumberofchildren=\count332
+\tikznumberofcurrentchild=\count333
+\tikz@fig@count=\count334
+
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmodulematrix.code.tex
+File: pgfmodulematrix.code.tex 2023-01-15 v3.1.10 (3.1.10)
+\pgfmatrixcurrentrow=\count335
+\pgfmatrixcurrentcolumn=\count336
+\pgf@matrix@numberofcolumns=\count337
+)
+\tikz@expandcount=\count338
+
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tik
+zlibrarytopaths.code.tex
+File: tikzlibrarytopaths.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)))
 (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2024-01-04 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count318
-\l__pdf_internal_box=\box110
+\l__color_backend_stack_int=\count339
+\l__pdf_internal_box=\box121
 )
 (/home/gonzagrau/Documents/ITBA/20242C/InstruII/CABRA/Informe/compiled_output/m
 ain.aux
@@ -1035,39 +1301,39 @@ LaTeX Info: Redefining \% on input line 12.
 )
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 53.
-LaTeX Font Info:    ... okay on input line 53.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 53.
-LaTeX Font Info:    ... okay on input line 53.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 53.
-LaTeX Font Info:    ... okay on input line 53.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 53.
-LaTeX Font Info:    ... okay on input line 53.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 53.
-LaTeX Font Info:    ... okay on input line 53.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 53.
-LaTeX Font Info:    ... okay on input line 53.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 53.
-LaTeX Font Info:    ... okay on input line 53.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 53.
-LaTeX Font Info:    ... okay on input line 53.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 53.
-LaTeX Font Info:    ... okay on input line 53.
-LaTeX Info: Redefining \. on input line 53.
-LaTeX Info: Redefining \% on input line 53.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 54.
+LaTeX Font Info:    ... okay on input line 54.
+LaTeX Info: Redefining \. on input line 54.
+LaTeX Info: Redefining \% on input line 54.
  (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count319
-\scratchdimen=\dimen270
-\scratchbox=\box111
-\nofMPsegments=\count320
-\nofMParguments=\count321
-\everyMPshowfont=\toks35
-\MPscratchCnt=\count322
-\MPscratchDim=\dimen271
-\MPnumerator=\count323
-\makeMPintoPDFobject=\count324
-\everyMPtoPDFconversion=\toks36
+\scratchcounter=\count340
+\scratchdimen=\dimen320
+\scratchbox=\box122
+\nofMPsegments=\count341
+\nofMParguments=\count342
+\everyMPshowfont=\toks47
+\MPscratchCnt=\count343
+\MPscratchDim=\dimen321
+\MPnumerator=\count344
+\makeMPintoPDFobject=\count345
+\everyMPtoPDFconversion=\toks48
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
@@ -1082,56 +1348,208 @@ Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
 Package newfloat Info: `float' package detected.
-Package hyperref Info: Link coloring ON on input line 53.
+Package hyperref Info: Link coloring ON on input line 54.
 
 (/home/gonzagrau/Documents/ITBA/20242C/InstruII/CABRA/Informe/compiled_output/m
 ain.out)
 (/home/gonzagrau/Documents/ITBA/20242C/InstruII/CABRA/Informe/compiled_output/m
 ain.out)
-\@outlinefile=\write3
-\openout3 = `main.out'.
+\@outlinefile=\write4
+\openout4 = `main.out'.
 
  (./00-caratula.tex
-<figuras/itba_logo.png, id=44, 1505.625pt x 499.8675pt>
+<figuras/itba_logo.png, id=127, 1505.625pt x 499.8675pt>
 File: figuras/itba_logo.png Graphic file (type png)
 <use figuras/itba_logo.png>
 Package pdftex.def Info: figuras/itba_logo.png  used on input line 4.
 (pdftex.def)             Requested size: 150.57132pt x 49.98967pt.
  [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./figuras/itba_logo.png>])
-
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texmf/fonts/enc/
+dvips/cm-super/cm-super-ts1.enc} <./figuras/itba_logo.png>])
 (/home/gonzagrau/Documents/ITBA/20242C/InstruII/CABRA/Informe/compiled_output/m
 ain.toc
 LaTeX Info: Redefining \. on input line 1.
 LaTeX Info: Redefining \% on input line 1.
 )
-\tf@toc=\write4
-\openout4 = `main.toc'.
+\tf@toc=\write5
+\openout5 = `main.toc'.
 
-File: figuras/itba_logo.png Graphic file (type png)
-<use figuras/itba_logo.png>
-Package pdftex.def Info: figuras/itba_logo.png  used on input line 57.
-(pdftex.def)             Requested size: 56.9055pt x 18.88531pt.
- [2] (./01-abstract.tex) (./02-introduccion.tex
-File: figuras/itba_logo.png Graphic file (type png)
-<use figuras/itba_logo.png>
-Package pdftex.def Info: figuras/itba_logo.png  used on input line 20.
-(pdftex.def)             Requested size: 56.9055pt x 18.88531pt.
- [3])
-(./03-marco_teorico.tex
-File: figuras/itba_logo.png Graphic file (type png)
-<use figuras/itba_logo.png>
-Package pdftex.def Info: figuras/itba_logo.png  used on input line 13.
-(pdftex.def)             Requested size: 56.9055pt x 18.88531pt.
- [4]) (./04-materiales_y_metodos.tex)
-(./05-resultados.tex) (./06-discusion.tex) (./07-conclusion.tex)
-(./08-bibliografia.tex
-File: figuras/itba_logo.png Graphic file (type png)
-<use figuras/itba_logo.png>
-Package pdftex.def Info: figuras/itba_logo.png  used on input line 1.
-(pdftex.def)             Requested size: 56.9055pt x 18.88531pt.
- [5]
+ [2] (./01-abstract.tex) (./02-introduccion.tex [3]
+
+LaTeX Warning: Citation `young-ABR' on page 4 undefined on input line 12.
+
+[4]) (./03-marco_teorico.tex
+<figuras/AEP.png, id=193, 204.765pt x 138.9993pt>
+File: figuras/AEP.png Graphic file (type png)
+<use figuras/AEP.png>
+Package pdftex.def Info: figuras/AEP.png  used on input line 9.
+(pdftex.def)             Requested size: 341.43436pt x 231.78862pt.
+
+
+LaTeX Warning: Citation `perez-gonzales-2014' on page 5 undefined on input line
+ 10.
+
+
+LaTeX Warning: Citation `perez-gonzales-2014' on page 5 undefined on input line
+ 10.
+
+
+LaTeX Warning: Citation `young-ABR' on page 5 undefined on input line 14.
+
+
+LaTeX Warning: Citation `sininger-1993-ABR' on page 5 undefined on input line 1
+6.
+
+[5 <./figuras/AEP.png>]
+
+LaTeX Warning: Citation `young-ABR' on page 6 undefined on input line 37.
+
+
+LaTeX Warning: Citation `bhattacharyya-ABR' on page 6 undefined on input line 3
+7.
+
+
+LaTeX Warning: Citation `madsen-2017-AverageEP' on page 6 undefined on input li
+ne 41.
+
+
+LaTeX Warning: Citation `davila-1992-Weigthed-Average' on page 6 undefined on i
+nput line 47.
+
+
+LaTeX Warning: Citation `pander-2014-Weigthed-Average' on page 6 undefined on i
+nput line 47.
+
+
+LaTeX Warning: Citation `norrix-2019-Weigthed-Average' on page 6 undefined on i
+nput line 47.
+
+[6]
+
+LaTeX Warning: Citation `Cognifit' on page 7 undefined on input line 58.
+
+
+LaTeX Warning: Citation `Fechner' on page 7 undefined on input line 62.
+
+
+LaTeX Warning: Citation `Fechner' on page 7 undefined on input line 62.
+
+
+LaTeX Warning: Citation `ISO389' on page 7 undefined on input line 71.
+
+
+LaTeX Warning: Citation `funasaka-1986' on page 7 undefined on input line 73.
+
+) (./04-materiales_y_metodos.tex [7]
+
+LaTeX Warning: Citation `espressif-systems-ESP32' on page 8 undefined on input 
+line 12.
+
+
+LaTeX Warning: Citation `kicad' on page 8 undefined on input line 24.
+
+
+LaTeX Warning: Citation `analog-devices-no-date' on page 8 undefined on input l
+ine 31.
+
+<figuras/Esquematico-Kicad.png, id=217, 1052.733pt x 419.166pt>
+File: figuras/Esquematico-Kicad.png Graphic file (type png)
+<use figuras/Esquematico-Kicad.png>
+Package pdftex.def Info: figuras/Esquematico-Kicad.png  used on input line 40.
+(pdftex.def)             Requested size: 426.79134pt x 169.93399pt.
+[8 <./figuras/Esquematico-Kicad.png>]
+
+LaTeX Warning: Citation `encyclopedia-scholarly-community' on page 9 undefined 
+on input line 68.
+
+[9] [10]
+<figuras/UI-general-view.png, id=240, 1156.32pt x 650.43pt>
+File: figuras/UI-general-view.png Graphic file (type png)
+<use figuras/UI-general-view.png>
+Package pdftex.def Info: figuras/UI-general-view.png  used on input line 159.
+(pdftex.def)             Requested size: 426.79134pt x 240.06976pt.
+ [11 <./figuras/UI-general-view.png>]
+Overfull \hbox (1.20128pt too wide) in paragraph at lines 241--243
+ []|\OT1/cmr/m/n/9 Capacitaci^^Son 
+ []
+
+
+Overfull \hbox (1.5839pt too wide) in paragraph at lines 251--253
+ []|\OT1/cmr/m/n/9 Instrucciones 
+ []
+
+
+Overfull \hbox (2.52765pt too wide) in paragraph at lines 265--266
+ []|\OT1/cmr/m/n/9 Cortocircuito 
+ []
+
+
+Overfull \hbox (27.84566pt too wide) in paragraph at lines 203--276
+ []|  [] 
+ []
+
+[12]) (./05-resultados.tex
+<figuras/UI-ESP-disconected.png, id=254, 1156.32pt x 650.43pt>
+File: figuras/UI-ESP-disconected.png Graphic file (type png)
+<use figuras/UI-ESP-disconected.png>
+Package pdftex.def Info: figuras/UI-ESP-disconected.png  used on input line 11.
+
+(pdftex.def)             Requested size: 426.79134pt x 240.06976pt.
+ [13 <./figuras/UI-ESP-disconected.png>]
+<figuras/UI-No-Board.png, id=262, 1156.32pt x 650.43pt>
+File: figuras/UI-No-Board.png Graphic file (type png)
+<use figuras/UI-No-Board.png>
+Package pdftex.def Info: figuras/UI-No-Board.png  used on input line 22.
+(pdftex.def)             Requested size: 426.79134pt x 240.06976pt.
+<figuras/UI-No-Patient.png, id=263, 1156.32pt x 650.43pt>
+File: figuras/UI-No-Patient.png Graphic file (type png)
+<use figuras/UI-No-Patient.png>
+Package pdftex.def Info: figuras/UI-No-Patient.png  used on input line 35.
+(pdftex.def)             Requested size: 426.79134pt x 240.06976pt.
+ [14 <./figuras/UI-No-Board.png>]
+<figuras/UI-noise.png, id=270, 1156.32pt x 650.43pt>
+File: figuras/UI-noise.png Graphic file (type png)
+<use figuras/UI-noise.png>
+Package pdftex.def Info: figuras/UI-noise.png  used on input line 46.
+(pdftex.def)             Requested size: 426.79134pt x 240.06976pt.
+ [15 <./figuras/UI-No-Patient.png>]
+<figuras/UI-EP.png, id=277, 1156.32pt x 650.43pt>
+File: figuras/UI-EP.png Graphic file (type png)
+<use figuras/UI-EP.png>
+Package pdftex.def Info: figuras/UI-EP.png  used on input line 57.
+(pdftex.def)             Requested size: 426.79134pt x 240.06976pt.
+ [16 <./figuras/UI-noise.png>]
+
+LaTeX Warning: Citation `ISO389' on page 17 undefined on input line 64.
+
+<figuras/UI-complete-study.png, id=284, 1156.32pt x 650.43pt>
+File: figuras/UI-complete-study.png Graphic file (type png)
+<use figuras/UI-complete-study.png>
+Package pdftex.def Info: figuras/UI-complete-study.png  used on input line 68.
+(pdftex.def)             Requested size: 426.79134pt x 240.06976pt.
+) (./06-discusion.tex [17 <./figuras/UI-EP.png>]
+
+LaTeX Warning: Citation `espressif-systems-ESP32' on page 18 undefined on input
+ line 4.
+
+
+Overfull \hbox (6.97249pt too wide) in paragraph at lines 6--7
+[]\OT1/cmr/m/n/10 En cuan-to a la prac-ti-ci-dad del dis-po-si-ti-vo, es re-co-
+men-da-ble im-ple-men-tar co-mu-ni-ca-ci^^Son inal^^Sambri-
+ []
+
+) (./07-conclusion.tex
+
+LaTeX Warning: Citation `business-research-insights-audiometers' on page 18 und
+efined on input line 3.
+
+[18 <./figuras/UI-complete-study.png>]
+
+LaTeX Warning: Citation `business-research-insights-audiometers' on page 19 und
+efined on input line 5.
+
+) (./08-bibliografia.tex [19]
 (/home/gonzagrau/Documents/ITBA/20242C/InstruII/CABRA/Informe/compiled_output/m
 ain.bbl
 ** WARNING: IEEEtran.bst: No hyphenation pattern has been
@@ -1176,12 +1594,7 @@ You may provide a definition with
 ** WARNING: IEEEtran.bst: No hyphenation pattern has been
 ** loaded for the language `en'. Using the pattern for
 ** the default language instead.
-))
-File: figuras/itba_logo.png Graphic file (type png)
-<use figuras/itba_logo.png>
-Package pdftex.def Info: figuras/itba_logo.png  used on input line 67.
-(pdftex.def)             Requested size: 56.9055pt x 18.88531pt.
- [6]
+)) (./09-apendice.tex) [20]
 (/home/gonzagrau/Documents/ITBA/20242C/InstruII/CABRA/Informe/compiled_output/m
 ain.aux
 LaTeX Info: Redefining \. on input line 12.
@@ -1193,6 +1606,9 @@ L3 programming layer <2024-01-22>
  ***********
 
 
+LaTeX Warning: There were undefined references.
+
+
 LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
 
@@ -1201,31 +1617,43 @@ Package rerunfilecheck Warning: File `main.out' has changed.
 (rerunfilecheck)                or use package `bookmark'.
 
 Package rerunfilecheck Info: Checksums for `main.out':
-(rerunfilecheck)             Before: 3BD16CDDE8E844A8D8721D41B6147C15;1349
-(rerunfilecheck)             After:  02F84329739BA0EDC8EF6AD74E10DC2B;1349.
+(rerunfilecheck)             Before: A513F5134BDA2FE2BEE5BF615011D934;6083
+(rerunfilecheck)             After:  5E43190C77D3DEEB55636650BFDFBD07;5932.
  ) 
 Here is how much of TeX's memory you used:
- 15420 strings out of 474222
- 250120 string characters out of 5748733
- 1938975 words of memory out of 5000000
- 37400 multiletter control sequences out of 15000+600000
- 561896 words of font info for 49 fonts, out of 8000000 for 9000
+ 25545 strings out of 474222
+ 471728 string characters out of 5748733
+ 1945975 words of memory out of 5000000
+ 47263 multiletter control sequences out of 15000+600000
+ 563371 words of font info for 54 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,14n,79p,545b,520s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
-r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/shar
-e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/share/tex
-live/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/t
-exmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-di
-st/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/font
-s/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/
-public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmti10.pfb>
+ 84i,14n,87p,1050b,528s stack positions out of 10000i,1000n,20000p,200000b,200000s
+
+pdfTeX warning (dest): name{subsection.4.9} has been referenced but does not ex
+ist, replaced by a fixed one
+
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/
+share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/
+texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb></usr/share/texlive
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmbxti10.pfb></usr/share/texlive/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/share/texlive/texmf-di
+st/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fon
+ts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmmi5.pfb></usr/share/texlive/texmf-dist/fonts/type1/publ
+ic/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsf
+onts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pf
+b></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/
+share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/
+texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texmf
+-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texmf/fonts/type1/p
+ublic/cm-super/sfbx2074.pfb>
 Output written on /home/gonzagrau/Documents/ITBA/20242C/InstruII/CABRA/Informe/
-compiled_output/main.pdf (6 pages, 175868 bytes).
+compiled_output/main.pdf (20 pages, 833875 bytes).
 PDF statistics:
- 164 PDF objects out of 1000 (max. 8388607)
- 134 compressed objects within 2 object streams
- 28 named destinations out of 1000 (max. 500000)
- 86 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 421 PDF objects out of 1000 (max. 8388607)
+ 340 compressed objects within 4 object streams
+ 78 named destinations out of 1000 (max. 500000)
+ 303 words of extra memory for PDF output out of 10000 (max. 10000000)
 
