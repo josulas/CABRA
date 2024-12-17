@@ -1,10 +1,10 @@
 #include <Arduino.h>
 
 // defines
-#define SAMPLERATE 12000 // Hz
+#define SAMPLERATE 16000 // Hz
 #define TIMERFREQUENCY 1000000 // Hz
 #define NSAMPLESPERBUFFER 128
-#define MAXSAMPLES 2000
+#define MAXSAMPLES 20000
 #define SERIALBAUD 500000
 #define READPIN 13
 
