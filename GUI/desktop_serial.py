@@ -16,16 +16,16 @@ import matplotlib.pyplot as plt
 STANDARD_FREQUENCIES_DICT = {0: 250, 1: 500, 2: 1000, 3: 2000, 4: 4000, 5: 8000}
 BAUDRATE = 500_000  # (MUST BE THE SAME AS IN THE ESP32 CODE)
 NUMBER_OF_BAUDS_PER_BIT = 10 # (DO NOT CHANGE)
-SAMPLINGRATE = 12_000 # Hz (MUST BE THE SAME AS IN THE ESP32 CODE)
+SAMPLINGRATE = 16_000 # Hz (MUST BE THE SAME AS IN THE ESP32 CODE)
 BYTESPERSAMPLE = 2 # (DO NOT CHANGE)
 NSAMPLESPERBUFFER = 128 # (MUST BE THE SAME AS IN THE ESP32 CODE)
-MAXNSAMPLES = 2_000 # (MUST BE THE SAME AS IN THE ESP32 CODE)
+MAXNSAMPLES = 20_000 # (MUST BE THE SAME AS IN THE ESP32 CODE)
 ADCRESOLUTION = 12 # bits (DO NOT CHANGE)
 QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.2  # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 40e-6
+THRESHOLDV = 80e-6
 GAIN = 50 * 390 * 0.4
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 OUTPUT_DIR = 'saved_data'
@@ -36,6 +36,12 @@ SERIAL_RECOGNIZER = "USB to UART Bridge"
 PLAYER_PATH_WINDOWS = r"./audio_playback_windows/audio_playback.exe"
 PLAYER_PATH_LINUX = r"./audio_playback_linux/audio_playback"
 TEMP_WAV_FILE = "~.wav"
+
+notch_iir = signal.iirdesign([940, 1060],
+                             [950, 1050],
+                             gpass=0.2, gstop = 45,
+                             fs=SAMPLINGRATE,
+                             output='sos')
 
 
 class Actions:
@@ -56,7 +62,7 @@ class ESPSerial:
                  sampling_rate: int = SAMPLINGRATE,
                  buffersize: int = SAMPLINGRATE,
                  bytessample: int = BYTESPERSAMPLE,
-                 alpha_s: int = 45,
+                 alpha_s: int = 60,
                  delta_f: int = 10,
                  f_pass: int = 150,
                  f_stop: int = 3000,
@@ -138,7 +144,7 @@ class ESPSerial:
         """
         bandpass_iir = signal.iirdesign([self.f_pass, self.f_stop],
                                         [self.f_pass - self.delta_f, self.f_stop + self.delta_f],
-                                        gpass=0.1, gstop = self.alpha_s,
+                                        gpass=1, gstop = self.alpha_s,
                                         fs=self.sampling_rate,
                                         output='sos')
         return bandpass_iir
@@ -208,15 +214,15 @@ class ESPSerial:
             time.sleep(0.01) # Avoids glitches in the clicks
         data = np.array(data)
         if len(data):
-            print(data.min(), data.max())
-            plt.plot(np.mean(data, axis=0))
-            plt.show()
             data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
-            print(data.min(), data.max())
+            # data = signal.sosfiltfilt(notch_iir, data, axis=1)
+            # print(data.min(), data.max())
+            plt.plot(np.mean(data, axis=0))
+            plt.plot(data[0])
+            plt.show()
             self.data =  data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
         else:
             self.data = data
-
     def close(self):
         """
         Close the serial connection
