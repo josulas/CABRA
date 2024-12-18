@@ -25,8 +25,8 @@ QUANTIZATION = 2 ** ADCRESOLUTION
 ADCMAX = 3.2  # V
 ADCMIN = 0.15 # V
 ADCRANGE = ADCMAX - ADCMIN
-THRESHOLDV = 80e-6
-GAIN = 50 * 390 * 0.4
+THRESHOLDV = 40e-6
+GAIN = 50 * 390 * 2
 THRESHOLD = THRESHOLDV * GAIN /  ADCRANGE * QUANTIZATION
 OUTPUT_DIR = 'saved_data'
 SERIAL_RECOGNIZER = "USB to UART Bridge"
@@ -217,9 +217,9 @@ class ESPSerial:
             data = signal.sosfiltfilt(self.bandpass_iir, data, axis=1)
             # data = signal.sosfiltfilt(notch_iir, data, axis=1)
             # print(data.min(), data.max())
-            plt.plot(np.mean(data, axis=0))
-            plt.plot(data[0])
-            plt.show()
+            # plt.plot(np.mean(data, axis=0))
+            # plt.plot(data[0])
+            # plt.show()
             self.data =  data[(data.max(axis=1) - data.min(axis=1)) <= self.threshold]
         else:
             self.data = data
